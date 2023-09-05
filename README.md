@@ -1,4 +1,4 @@
-# pric
+# PIRC - Pip Install Requirements Creator
 
 
 
