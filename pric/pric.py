@@ -1,3 +1,4 @@
+import os
 import subprocess
 import traceback
 from typing import List
@@ -18,22 +19,22 @@ def decorative_print(msg: str) -> None:
     # fmt: on
 
 
-def create_requirements(package_names: set) -> None:
+def create_requirements(package_names: set, requirements_loc: str) -> None:
     for pkg in package_names:
-        with open(REQUIREMENTS_TXT, "a") as req_file:
+        with open(requirements_loc, "a") as req_file:
             req_file.write(f"{pkg}\n")
 
 
-def load_requirements_file() -> set:
+def load_requirements_file(requirements_loc: str) -> set:
     requirements = set()
     try:
-        with open(REQUIREMENTS_TXT, "r") as req_file:
+        with open(requirements_loc, "r") as req_file:
             for line in req_file:
                 stripped_line = line.strip()
                 if stripped_line:
                     requirements.add(stripped_line)
     except FileNotFoundError:
-        decorative_print("requirements.txt file not found. Creating new one.")
+        decorative_print(f"{requirements_loc} file not found. Creating new one.")
     finally:
         return requirements
 
@@ -56,19 +57,21 @@ def get_name_version(package_names: set) -> set:
     return installed_pkgs
 
 
-def install_package(package_names: List[str]) -> None:
+def install_package(package_names: List[str], requirements_loc: str = ".") -> None:
+    requirements_txt = os.path.join(requirements_loc, REQUIREMENTS_TXT)
+
     if not package_names:
         decorative_print("No packages provided for installation.")
         return
 
-    current_pkgs = load_requirements_file()
+    current_pkgs = load_requirements_file(requirements_loc=requirements_txt)
     new_pkgs = get_name_version(package_names=package_names)
     new_pkgs = new_pkgs - current_pkgs
-    create_requirements(package_names=new_pkgs)
+    create_requirements(package_names=new_pkgs, requirements_loc=requirements_txt)
 
     try:
-        subprocess.run(["pip", "install", "-r", REQUIREMENTS_TXT], check=True)
-        decorative_print(f"Installed packages from {REQUIREMENTS_TXT}")
+        subprocess.run(["pip", "install", "-r", requirements_txt], check=True)
+        decorative_print(f"Installed packages from {requirements_txt}")
     except subprocess.CalledProcessError as e:
         decorative_print("Failed to install packages: ")
         traceback.print_exc(e)
