@@ -7,14 +7,15 @@ import typer
 from packaging.version import parse
 
 REQUIREMENTS_TXT = "requirements.txt"
+PYPI_URL = lambda pkg_name: f"https://pypi.org/pypi/{pkg_name}/json"
 
 
 def decorative_print(msg: str) -> None:
     num = 50
     num_end = num - 2
-    print(
-        f"{'-'*num}pyinstall log{'-'*num}\n\t{msg}\n{'-'*num_end}pyinstall log end{'-'*num_end}"
-    )
+    # fmt: off
+    print(f"{'-'*num}pyinstall log{'-'*num}\n\t{msg}\n{'-'*num_end}pyinstall log end{'-'*num_end}")
+    # fmt: on
 
 
 def create_requirements(package_names: set) -> None:
@@ -41,7 +42,7 @@ def get_name_version(package_names: set) -> set:
     installed_pkgs = set()
     for pkg_name in package_names:
         try:
-            response = requests.get(f"https://pypi.org/pypi/{pkg_name}/json")
+            response = requests.get(PYPI_URL(pkg_name=pkg_name))
             response.raise_for_status()
             package_data = response.json()
             releases = package_data["releases"].keys()
