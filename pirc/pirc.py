@@ -2,14 +2,16 @@ import os
 import subprocess
 import traceback
 from typing import List
+import sys
 
 import requests
 import typer
 from packaging.version import parse
-from models import Package
+from .models import Package
 
 REQUIREMENTS_TXT = "requirements.txt"
 PYPI_URL = lambda pkg_name: f"https://pypi.org/pypi/{pkg_name}/json"
+PY_VERSION = sys.version
 
 main = typer.Typer()
 
@@ -22,6 +24,10 @@ def decorative_print(msg: str) -> None:
     # fmt: on
 
 
+def name_parse(pkg: str) -> List[str, str]:
+    return pkg.strip().split("==")
+
+
 def create_requirements(
     package_names: set,
     requirements_loc: str,
@@ -29,7 +35,7 @@ def create_requirements(
 ) -> None:
     with open(requirements_loc, flag) as req_file:
         for pkg in package_names:
-            req_file.write(f"{pkg.name}=={pkg.version}\n")
+            req_file.write(f"{pkg}\n")
 
 
 def load_requirements_file(requirements_loc: str) -> set:
@@ -37,7 +43,7 @@ def load_requirements_file(requirements_loc: str) -> set:
     try:
         with open(requirements_loc, "r") as req_file:
             for line in req_file:
-                name, version = line.strip().split("==")
+                name, version = name_parse(line)
                 pkg = Package(name, version)
                 requirements.add(pkg)
     except FileNotFoundError:
@@ -53,11 +59,9 @@ def get_name_version(package_names: set) -> set:
             response = requests.get(PYPI_URL(pkg_name=pkg_name))
             response.raise_for_status()
             package_data = response.json()
-            releases = package_data["releases"].keys()
-            print(releases)
-            latest_version = max(releases, key=parse)
+            version = package_data["info"]["version"]
 
-            pkg_name_version = f"{pkg_name}=={latest_version}"
+            pkg_name_version = Package(pkg_name, version)
             installed_pkgs.add(pkg_name_version)
         except Exception as e:
             decorative_print(f"Failed to find the latest version of {pkg_name} on PyPI")
