@@ -1,54 +1,65 @@
 # PIRC - Pip Install Requirements Creator
 
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
 ***
 
-## Name
-Choose a self-explaining name for your project.
-
+[//]: # ([![License]&#40;https://img.shields.io/badge/license-MIT-blue.svg&#41;]&#40;https://opensource.org/licenses/MIT&#41;)
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 ## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+**pirc** (pip install requirements creator) is a command-line tool for Python developers that simplifies the management of project dependencies and requirements. It allows you to easily add or remove packages from your project's `requirements.txt` file and install them with a single command. With **pirc**, you can keep your project's dependencies organized and up-to-date, making it a valuable addition to your Python development workflow.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+
+### Prerequisites
+
+Before using **pirc**, make sure you have Python 3.8 or higher installed on your system.
+
+### Installation Steps
+
+1. Install **pirc** using pip:
+
+    ```
+    pip install pirc
+    ```
+
+2. Verify the installation by running:
+
+    ```
+    pirc --help
+    ```
+
+3. You're ready to use **pirc**!
 
 ## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Adding Packages to `requirements.txt`
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+To add one or more packages to your project's `requirements.txt` file and install them, use the following command:
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+```
+pirc install package_name1 package_name2 ...
+```
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+### Removing Packages from `requirements.txt`
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+To remove one or more packages from your project's `requirements.txt` file and uninstall them, use the following command:
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+```
+pirc uninstall package_name1 package_name2 ...
+```
 
-## License
-For open source projects, say how it is licensed.
+**Note:** Make sure to replace `package_name1`, `package_name2`, etc., with the actual names of the packages you want to add or remove.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+### Additional Options
+
+- You can specify a custom path for your `requirements.txt` file using the `--requirements-path` option. By default, it assumes `./requirements.txt`.
+
+[//]: # (## License)
+
+[//]: # ()
+[//]: # (This project is licensed under the MIT License - see the [LICENSE]&#40;LICENSE&#41; file for details.)
+
+## Contributions
+
+Contributions to **pirc** are welcome! If you encounter any issues or have suggestions for improvements, please open an issue or submit a pull request on the [GitHub repository](https://github.com/kokoteen/pirc).
