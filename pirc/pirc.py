@@ -6,12 +6,13 @@ import sys
 
 import requests
 import typer
-from packaging.version import parse
+from packaging.version import parse, Version
+from packaging.specifiers import SpecifierSet
 from .models import Package
 
 REQUIREMENTS_TXT = "requirements.txt"
 PYPI_URL = lambda pkg_name: f"https://pypi.org/pypi/{pkg_name}/json"
-PY_VERSION = sys.version
+PY_VERSION = Version(sys.version.split()[0])
 
 main = typer.Typer()
 
@@ -24,7 +25,7 @@ def decorative_print(msg: str) -> None:
     # fmt: on
 
 
-def name_parse(pkg: str) -> List[str, str]:
+def parse_name(pkg: str) -> List[str]:
     return pkg.strip().split("==")
 
 
@@ -43,7 +44,7 @@ def load_requirements_file(requirements_loc: str) -> set:
     try:
         with open(requirements_loc, "r") as req_file:
             for line in req_file:
-                name, version = name_parse(line)
+                name, version = parse_name(line)
                 pkg = Package(name, version)
                 requirements.add(pkg)
     except FileNotFoundError:
@@ -59,7 +60,16 @@ def get_name_version(package_names: set) -> set:
             response = requests.get(PYPI_URL(pkg_name=pkg_name))
             response.raise_for_status()
             package_data = response.json()
-            version = package_data["info"]["version"]
+
+            valid_versions = {
+                rel
+                for rel in package_data["releases"]
+                for elem in package_data["releases"][rel]
+                if elem["requires_python"] is not None
+                and PY_VERSION in SpecifierSet(elem["requires_python"])
+            }
+
+            version = max(valid_versions, key=parse)
 
             pkg_name_version = Package(pkg_name, version)
             installed_pkgs.add(pkg_name_version)
