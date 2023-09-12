@@ -9,6 +9,6 @@ setup(
             "pirc = pirc.pirc:main",
         ],
     },
-    install_requires=["typer==0.9.0", "requests==2.31.0", "packaging==23.1"],
+    install_requires=["typer[all]==0.9.0", "requests==2.31.0", "packaging==23.1"],
     python_requires=">=3.8",
 )
