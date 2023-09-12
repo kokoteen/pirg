@@ -80,33 +80,37 @@ def get_name_version(package_names: set) -> set:
 
 
 @main.command()
-def install(package_names: List[str], requirements_loc: str = ".") -> None:
-    requirements_txt = os.path.join(requirements_loc, REQUIREMENTS_TXT)
+def install(
+    package_names: List[str],
+    requirements_path: str = "./requirements.txt",
+) -> None:
+    package_names = set(package_names)
 
-    current_pkgs = load_requirements_file(requirements_loc=requirements_txt)
+    current_pkgs = load_requirements_file(requirements_loc=requirements_path)
     new_pkgs = get_name_version(package_names=package_names)
     new_pkgs = new_pkgs - current_pkgs
-    create_requirements(package_names=new_pkgs, requirements_loc=requirements_txt)
+    create_requirements(package_names=new_pkgs, requirements_loc=requirements_path)
 
     try:
-        subprocess.run(["pip", "install", "-r", requirements_txt], check=True)
-        decorative_print(f"Installed packages from {requirements_txt}")
+        subprocess.run(["pip", "install", "-r", requirements_path], check=True)
+        decorative_print(f"Installed packages from {requirements_path}")
     except subprocess.CalledProcessError as e:
         decorative_print("Failed to install packages: ")
         traceback.print_exc(e)
 
 
 @main.command()
-def uninstall(package_names: List[str], requirements_loc: str = ".") -> None:
-    requirements_txt = os.path.join(requirements_loc, REQUIREMENTS_TXT)
-
+def uninstall(
+    package_names: List[str],
+    requirements_path: str = "./requirements.txt",
+) -> None:
     new_pkgs = set([Package(name) for name in package_names])
-    current_pkgs = load_requirements_file(requirements_loc=requirements_txt)
+    current_pkgs = load_requirements_file(requirements_loc=requirements_path)
 
     current_pkgs = current_pkgs - new_pkgs
     create_requirements(
         package_names=current_pkgs,
-        requirements_loc=requirements_txt,
+        requirements_loc=requirements_path,
         flag="w",
     )
 
