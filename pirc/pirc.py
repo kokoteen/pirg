@@ -1,5 +1,5 @@
-import os
 import subprocess
+from requests.exceptions import HTTPError
 import traceback
 from typing import List
 import sys
@@ -56,26 +56,23 @@ def load_requirements_file(requirements_loc: str) -> set:
 def get_name_version(package_names: set) -> set:
     installed_pkgs = set()
     for pkg_name in package_names:
-        try:
-            response = requests.get(PYPI_URL(pkg_name=pkg_name))
-            response.raise_for_status()
-            package_data = response.json()
+        response = requests.get(PYPI_URL(pkg_name=pkg_name))
+        response.raise_for_status()
+        package_data = response.json()
 
-            valid_versions = {
-                rel
-                for rel in package_data["releases"]
-                for elem in package_data["releases"][rel]
-                if elem["requires_python"] is not None
-                and PY_VERSION in SpecifierSet(elem["requires_python"])
-            }
+        valid_versions = {
+            rel
+            for rel in package_data["releases"]
+            for elem in package_data["releases"][rel]
+            if elem["requires_python"] is not None
+            and PY_VERSION in SpecifierSet(elem["requires_python"])
+        }
 
-            version = max(valid_versions, key=parse)
+        version = max(valid_versions, key=parse)
+        version = Version(version)
 
-            pkg_name_version = Package(pkg_name, version)
-            installed_pkgs.add(pkg_name_version)
-        except Exception as e:
-            decorative_print(f"Failed to find the latest version of {pkg_name} on PyPI")
-            traceback.print_exc(e)
+        pkg_name_version = Package(pkg_name, version)
+        installed_pkgs.add(pkg_name_version)
     return installed_pkgs
 
 
@@ -86,17 +83,21 @@ def install(
 ) -> None:
     package_names = set(package_names)
 
-    current_pkgs = load_requirements_file(requirements_loc=requirements_path)
-    new_pkgs = get_name_version(package_names=package_names)
-    new_pkgs = new_pkgs - current_pkgs
-    create_requirements(package_names=new_pkgs, requirements_loc=requirements_path)
-
     try:
+        current_pkgs = load_requirements_file(requirements_loc=requirements_path)
+        new_pkgs = get_name_version(package_names=package_names)
+        new_pkgs = new_pkgs - current_pkgs
+        create_requirements(package_names=new_pkgs, requirements_loc=requirements_path)
+
         subprocess.run(["pip", "install", "-r", requirements_path], check=True)
         decorative_print(f"Installed packages from {requirements_path}")
+    except HTTPError as e:
+        pkg_name = e.args[0].split()[-1].split("/")[-2]
+        decorative_print(f"Failed to find the latest version of {pkg_name} on PyPI")
+        traceback.print_exc()
     except subprocess.CalledProcessError as e:
         decorative_print("Failed to install packages: ")
-        traceback.print_exc(e)
+        traceback.print_exc()
 
 
 @main.command()
@@ -104,23 +105,27 @@ def uninstall(
     package_names: List[str],
     requirements_path: str = "./requirements.txt",
 ) -> None:
-    new_pkgs = set([Package(name) for name in package_names])
-    current_pkgs = load_requirements_file(requirements_loc=requirements_path)
-
-    current_pkgs = current_pkgs - new_pkgs
-    create_requirements(
-        package_names=current_pkgs,
-        requirements_loc=requirements_path,
-        flag="w",
-    )
-
     try:
+        new_pkgs = set([Package(name) for name in package_names])
+        current_pkgs = load_requirements_file(requirements_loc=requirements_path)
+
+        current_pkgs = current_pkgs - new_pkgs
+        create_requirements(
+            package_names=current_pkgs,
+            requirements_loc=requirements_path,
+            flag="w",
+        )
+
         rm_pkgs = [p.name for p in new_pkgs]
         subprocess.run(["pip", "uninstall"] + rm_pkgs, check=True)
         decorative_print(f"Removed packages {rm_pkgs}")
+    except HTTPError as e:
+        pkg_name = e.args[0].split()[-1].split("/")[-2]
+        decorative_print(f"Failed to find the latest version of {pkg_name} on PyPI")
+        traceback.print_exc()
     except subprocess.CalledProcessError as e:
         decorative_print("Failed to remove packages: ")
-        traceback.print_exc(e)
+        traceback.print_exc()
 
 
 if __name__ == "__main__":
