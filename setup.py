@@ -8,7 +8,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=README,
     url="https://github.com/kokoteen/pirc",
-    author="kokotin"
+    author="kokotin",
     entry_points={
         "console_scripts": [
             "pirc = pirc.pirc:main",
