@@ -7,7 +7,7 @@ jobs:
     name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
     runs-on: ubuntu-latest
     environment:
-      name: testpypi
+      name: pypi
       url: https://pypi.org/p/pirc
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
