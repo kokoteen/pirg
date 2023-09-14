@@ -6,7 +6,7 @@ setup(
     name="pirc",
     version="0.0.1",
     packages=find_packages(),
-    description="command-line that simplifies the management of project's `requirements.txt` file",
+    description="command-line tool that simplifies the management of project's `requirements.txt` file",
     long_description_content_type="text/markdown",
     long_description=Path("README.md").read_text(encoding="utf-8"),
     url="https://github.com/kokoteen/pirc",
