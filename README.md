@@ -61,27 +61,23 @@ pirc uninstall package_name1 package_name2 ...
 This project makes use of the following third-party libraries, each with its own licensing terms:
 
 - [Typer](https://github.com/tiangolo/typer)
-  - **License**: MIT License
-  - **License File**: [MIT License](./licenses/MIT.txt)
+  - **License**: [MIT License](./licenses/MIT.txt)
 
 - [Requests](https://github.com/psf/requests)
-  - **License**: Apache License 2.0
-  - **License File**: [Apache License 2.0](./licenses/APACHE-2.0.txt)
+  - **License**: [Apache License 2.0](./licenses/APACHE-2.0.txt)
  
 - [Packaging](https://github.com/pypa/packaging)
-  - **License**: Apache License 2.0
-  - **License File**: [Apache License 2.0](./licenses/APACHE-2.0.txt)
+  - **License**: [Apache License 2.0](./licenses/APACHE-2.0.txt)
 
 Additionally, this project contains code under the GPL-2.0 License:
 
-- **License**: GNU General Public License, version 2.0
-- **License File**: [GPL-2.0 License](./licenses/GPL-2.0.txt)
+- **License**: [GPL-2.0 License](./licenses/GPL-2.0.txt)
 
 ## License
 
 This project is licensed under the terms of the GNU General Public License, version 2.0. See the [GPL-2.0 License](./licenses/GPL-2.0.txt) file for details.
 
-The third-party libraries Typer and Requests are used in this project and have their own respective licenses. Please review their licenses in the [licenses](./licenses) directory for more information.
+The third-party libraries Typer, Packaging and Requests are used in this project and have their own respective licenses. Please review their licenses in the [licenses](./licenses) directory for more information.
 
 
 ## Contributions
