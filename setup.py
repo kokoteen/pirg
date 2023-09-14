@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from setuptools import find_packages, setup
 
 setup(
@@ -6,7 +8,7 @@ setup(
     packages=find_packages(),
     description="command-line that simplifies the management of project's `requirements.txt` file",
     long_description_content_type="text/markdown",
-    long_description=README,
+    long_description=Path("README.md").read_text(encoding="utf-8"),
     url="https://github.com/kokoteen/pirc",
     author="kokotin",
     entry_points={
