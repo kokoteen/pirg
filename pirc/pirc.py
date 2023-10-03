@@ -1,4 +1,3 @@
-import pip
 import subprocess
 from requests.exceptions import HTTPError
 import traceback
@@ -83,10 +82,13 @@ def get_name_version(package_names: set) -> set:
 @main.command()
 def install(
     package_names: Annotated[Optional[List[str]], typer.Argument()] = None,
-    requirements_path: str = "./requirements.txt",
-    pip_args: Annotated[Tuple[str, str], typer.Option()] = (None, None),
+    requirements_path: Annotated[str, typer.Option()] = "./requirements.txt",
 ) -> None:
-    package_names = set(package_names)
+    # TODO: add documentation that explains --
+    dash_idx = sys.argv.index("--") + 1
+    pip_args = set(sys.argv[dash_idx:])
+
+    package_names = set(package_names) - pip_args
 
     try:
         current_pkgs = load_requirements_file(requirements_loc=requirements_path)
@@ -94,13 +96,12 @@ def install(
         new_pkgs = new_pkgs - current_pkgs
         create_requirements(package_names=new_pkgs, requirements_loc=requirements_path)
 
-        pip_args = [] if pip_args == (None, None) else list(pip_args)
         ins_pkgs = [p.name for p in new_pkgs]
 
         if not ins_pkgs and not pip_args:
             raise NothingToDo("Nothing to install")
 
-        subprocess.run(["pip", "install"] + ins_pkgs + pip_args, check=True)
+        subprocess.run(["pip", "install"] + ins_pkgs + list(pip_args), check=True)
         decorative_print(f"Installed packages {ins_pkgs}")
 
     except HTTPError as e:
@@ -118,8 +119,13 @@ def install(
 def uninstall(
     package_names: Annotated[Optional[List[str]], typer.Argument()] = None,
     requirements_path: str = "./requirements.txt",
-    pip_args: Annotated[Tuple[str, str], typer.Option()] = (None, None),
 ) -> None:
+    # TODO: add documentation that explains --
+    dash_idx = sys.argv.index("--") + 1
+    pip_args = set(sys.argv[dash_idx:])
+
+    package_names = set(package_names) - pip_args
+
     try:
         new_pkgs = set([Package(name) for name in package_names])
         current_pkgs = load_requirements_file(requirements_loc=requirements_path)
@@ -130,13 +136,12 @@ def uninstall(
             flag="w",
         )
 
-        pip_args = [] if pip_args == (None, None) else list(pip_args)
         rm_pkgs = [p.name for p in new_pkgs]
 
         if not rm_pkgs and not pip_args:
             raise NothingToDo("Nothing to remove")
 
-        subprocess.run(["pip", "uninstall"] + rm_pkgs + pip_args, check=True)
+        subprocess.run(["pip", "uninstall"] + rm_pkgs + list(pip_args), check=True)
         decorative_print(f"Removed packages {rm_pkgs}")
     except HTTPError as e:
         pkg_name = e.args[0].split()[-1].split("/")[-2]
