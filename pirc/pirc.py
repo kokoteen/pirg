@@ -1,7 +1,7 @@
 import subprocess
 from requests.exceptions import HTTPError
 import traceback
-from typing import List, Optional, Tuple
+from typing import List, Optional
 import sys
 
 from typing_extensions import Annotated
