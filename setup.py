@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="pirc",
-    version="0.0.4",
+    version="0.0.5",
     packages=find_packages(),
     description="command-line tool that simplifies the management of project's `requirements.txt` file",
     long_description_content_type="text/markdown",
