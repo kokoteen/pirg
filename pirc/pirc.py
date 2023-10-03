@@ -1,8 +1,12 @@
 import subprocess
 from requests.exceptions import HTTPError
 import traceback
-from typing import List
+from typing import List, Optional
 import sys
+
+from typing_extensions import Annotated
+
+from .custom_exceptions import NothingToDo
 
 import requests
 import typer
@@ -10,7 +14,6 @@ from packaging.version import parse, Version
 from packaging.specifiers import SpecifierSet
 from .models import Package
 
-REQUIREMENTS_TXT = "requirements.txt"
 PYPI_URL = lambda pkg_name: f"https://pypi.org/pypi/{pkg_name}/json"
 PY_VERSION = Version(sys.version.split()[0])
 
@@ -78,10 +81,14 @@ def get_name_version(package_names: set) -> set:
 
 @main.command()
 def install(
-    package_names: List[str],
-    requirements_path: str = "./requirements.txt",
+    package_names: Annotated[Optional[List[str]], typer.Argument()] = None,
+    requirements_path: Annotated[str, typer.Option()] = "./requirements.txt",
 ) -> None:
-    package_names = set(package_names)
+    # TODO: add documentation that explains --
+    dash_idx = sys.argv.index("--") + 1
+    pip_args = set(sys.argv[dash_idx:])
+
+    package_names = set(package_names) - pip_args
 
     try:
         current_pkgs = load_requirements_file(requirements_loc=requirements_path)
@@ -89,26 +96,39 @@ def install(
         new_pkgs = new_pkgs - current_pkgs
         create_requirements(package_names=new_pkgs, requirements_loc=requirements_path)
 
-        subprocess.run(["pip", "install", "-r", requirements_path], check=True)
-        decorative_print(f"Installed packages from {requirements_path}")
+        ins_pkgs = [p.name for p in new_pkgs]
+
+        if not ins_pkgs and not pip_args:
+            raise NothingToDo("Nothing to install")
+
+        subprocess.run(["pip", "install"] + ins_pkgs + list(pip_args), check=True)
+        decorative_print(f"Installed packages {ins_pkgs}")
+
     except HTTPError as e:
         pkg_name = e.args[0].split()[-1].split("/")[-2]
         decorative_print(f"Failed to find the latest version of {pkg_name} on PyPI")
         traceback.print_exc()
     except subprocess.CalledProcessError as e:
-        decorative_print("Failed to install packages: ")
+        decorative_print("Failed to install packages")
         traceback.print_exc()
+    except NothingToDo as e:
+        decorative_print(str(e))
 
 
 @main.command()
 def uninstall(
-    package_names: List[str],
+    package_names: Annotated[Optional[List[str]], typer.Argument()] = None,
     requirements_path: str = "./requirements.txt",
 ) -> None:
+    # TODO: add documentation that explains --
+    dash_idx = sys.argv.index("--") + 1
+    pip_args = set(sys.argv[dash_idx:])
+
+    package_names = set(package_names) - pip_args
+
     try:
         new_pkgs = set([Package(name) for name in package_names])
         current_pkgs = load_requirements_file(requirements_loc=requirements_path)
-
         current_pkgs = current_pkgs - new_pkgs
         create_requirements(
             package_names=current_pkgs,
@@ -117,15 +137,21 @@ def uninstall(
         )
 
         rm_pkgs = [p.name for p in new_pkgs]
-        subprocess.run(["pip", "uninstall"] + rm_pkgs, check=True)
+
+        if not rm_pkgs and not pip_args:
+            raise NothingToDo("Nothing to remove")
+
+        subprocess.run(["pip", "uninstall"] + rm_pkgs + list(pip_args), check=True)
         decorative_print(f"Removed packages {rm_pkgs}")
     except HTTPError as e:
         pkg_name = e.args[0].split()[-1].split("/")[-2]
         decorative_print(f"Failed to find the latest version of {pkg_name} on PyPI")
         traceback.print_exc()
     except subprocess.CalledProcessError as e:
-        decorative_print("Failed to remove packages: ")
+        decorative_print("Failed to remove packages")
         traceback.print_exc()
+    except NothingToDo as e:
+        decorative_print(str(e))
 
 
 if __name__ == "__main__":
