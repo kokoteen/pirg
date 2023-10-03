@@ -23,9 +23,7 @@ main = typer.Typer()
 def decorative_print(msg: str) -> None:
     num = 50
     num_end = num - 2
-    # fmt: off
     print(f"{'-' * num}pirc log{'-' * num}\n\t{msg}\n{'-' * num_end}pirc log end{'-' * num_end}")
-    # fmt: on
 
 
 def parse_name(pkg: str) -> List[str]:
@@ -81,10 +79,18 @@ def get_name_version(package_names: set) -> set:
 
 @main.command()
 def install(
-    package_names: Annotated[Optional[List[str]], typer.Argument()] = None,
+    package_names: Annotated[Optional[List[str]], typer.Argument(help="List of packages")] = None,
     requirements_path: Annotated[str, typer.Option()] = "./requirements.txt",
 ) -> None:
-    # TODO: add documentation that explains --
+    """
+    Installs [package_names] and puts them in the requirements file on [reqirements_path] location
+
+    You can pass additional `pip install` arguments after "--".
+
+    Example:
+        `pirc install torch -- --index-url https://download.pytorch.org/whl/cu118`
+
+    """
     dash_idx = sys.argv.index("--") + 1
     pip_args = set(sys.argv[dash_idx:])
 
@@ -120,6 +126,15 @@ def uninstall(
     package_names: Annotated[Optional[List[str]], typer.Argument()] = None,
     requirements_path: str = "./requirements.txt",
 ) -> None:
+    """
+    Uninstalls [package_names] and removes them from the requirements file on [reqirements_path] location
+
+    You can pass additional `pip uninstall` arguments after "--".
+
+    Example:
+        `pirc uninstall torch -- -r requirements.txt --yes`
+
+    """
     # TODO: add documentation that explains --
     dash_idx = sys.argv.index("--") + 1
     pip_args = set(sys.argv[dash_idx:])
