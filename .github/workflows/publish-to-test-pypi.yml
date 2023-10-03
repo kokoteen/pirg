@@ -1,10 +1,8 @@
 name: Publish Python 🐍 distributions 📦 to PyPI and TestPyPI
 
 on:
-  pull_request:
-    branches: 
-      - main
-    types: [closed]
+  registry_package:
+    types: [published]
 
 jobs:
   build-n-publish:
