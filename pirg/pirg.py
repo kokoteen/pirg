@@ -135,7 +135,6 @@ def uninstall(
         `pirg uninstall torch -- -r requirements.txt --yes`
 
     """
-    # TODO: add documentation that explains --
     dash_idx = sys.argv.index("--") + 1
     pip_args = set(sys.argv[dash_idx:])
 
