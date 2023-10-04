@@ -23,7 +23,7 @@ main = typer.Typer()
 def decorative_print(msg: str) -> None:
     num = 50
     num_end = num - 2
-    print(f"{'-' * num}pirc log{'-' * num}\n\t{msg}\n{'-' * num_end}pirc log end{'-' * num_end}")
+    print(f"{'-' * num}pirg log{'-' * num}\n\t{msg}\n{'-' * num_end}pirg log end{'-' * num_end}")
 
 
 def parse_name(pkg: str) -> List[str]:
@@ -88,7 +88,7 @@ def install(
     You can pass additional `pip install` arguments after "--".
 
     Example:
-        `pirc install torch -- --index-url https://download.pytorch.org/whl/cu118`
+        `pirg install torch -- --index-url https://download.pytorch.org/whl/cu118`
 
     """
     dash_idx = sys.argv.index("--") + 1
@@ -132,7 +132,7 @@ def uninstall(
     You can pass additional `pip uninstall` arguments after "--".
 
     Example:
-        `pirc uninstall torch -- -r requirements.txt --yes`
+        `pirg uninstall torch -- -r requirements.txt --yes`
 
     """
     # TODO: add documentation that explains --
