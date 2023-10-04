@@ -1,4 +1,4 @@
-# PIRC - Pip Install Requirements Creator
+# PiRG - Pip Requirements Generator
 
 ***
 
@@ -7,30 +7,30 @@
 
 ## Description
 
-**pirc** (pip install requirements creator) is a command-line tool for Python developers that simplifies the management of project dependencies and requirements. It allows you to easily add or remove packages from your project's `requirements.txt` file and install them with a single command. With **pirc**, you can keep your project's dependencies organized and up-to-date, making it a valuable addition to your Python development workflow.
+**pirg** (pip install requirements creator) is a command-line tool for Python developers that simplifies the management of project dependencies and requirements. It allows you to easily add or remove packages from your project's `requirements.txt` file and install them with a single command. With **pirg**, you can keep your project's dependencies organized and up-to-date, making it a valuable addition to your Python development workflow.
 
 
 ## Installation
 
 ### Prerequisites
 
-Before using **pirc**, make sure you have Python 3.8 or higher installed on your system.
+Before using **pirg**, make sure you have Python 3.8 or higher installed on your system.
 
 ### Installation Steps
 
-1. Install **pirc** using pip:
+1. Install **pirg** using pip:
 
     ```
-    pip install pirc
+    pip install pirg
     ```
 
 2. Verify the installation by running:
 
     ```
-    pirc --help
+    pirg --help
     ```
 
-3. You're ready to use **pirc**!
+3. You're ready to use **pirg**!
 
 ## Usage
 
@@ -39,7 +39,7 @@ Before using **pirc**, make sure you have Python 3.8 or higher installed on your
 To add one or more packages to your project's `requirements.txt` file and install them, use the following command:
 
 ```
-pirc install package_name1 package_name2 ...
+pirg install package_name1 package_name2 ...
 ```
 
 ### Removing Packages from `requirements.txt`
@@ -47,7 +47,7 @@ pirc install package_name1 package_name2 ...
 To remove one or more packages from your project's `requirements.txt` file and uninstall them, use the following command:
 
 ```
-pirc uninstall package_name1 package_name2 ...
+pirg uninstall package_name1 package_name2 ...
 ```
 
 **Note:** Make sure to replace `package_name1`, `package_name2`, etc., with the actual names of the packages you want to add or remove.
@@ -82,4 +82,4 @@ The third-party libraries Typer, Packaging and Requests are used in this project
 
 ## Contributions
 
-Contributions to **pirc** are welcome! If you encounter any issues or have suggestions for improvements, please open an issue or submit a pull request on the [GitHub repository](https://github.com/kokoteen/pirc).
+Contributions to **pirg** are welcome! If you encounter any issues or have suggestions for improvements, please open an issue or submit a pull request on the [GitHub repository](https://github.com/kokoteen/pirg).

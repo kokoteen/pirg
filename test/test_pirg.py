@@ -1,6 +1,6 @@
 import os
 import pytest
-from pirc.pirc import (
+from pirg.pirg import (
     create_requirements,
     load_requirements_file,
     get_name_version,
