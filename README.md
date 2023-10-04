@@ -7,8 +7,9 @@
 
 ## Description
 
-**pirg** (pip install requirements creator) is a command-line tool for Python developers that simplifies the management of project dependencies and requirements. It allows you to easily add or remove packages from your project's `requirements.txt` file and install them with a single command. With **pirg**, you can keep your project's dependencies organized and up-to-date, making it a valuable addition to your Python development workflow.
+**PiRG** (Pip Requirements Generator) is a minimalist command-line tool designed for Python developers who prefer a simple approach to managing project dependencies. Unlike traditional requirements files that include all installed packages and their dependencies, PiRG focuses on capturing only the primary packages you install using `pip install`. This makes your `requirements.txt` file concise and easier to manage.
 
+With PiRG, you can also pass additional `pip install` or `pip uninstall` options to customize package installation and removal.
 
 ## Installation
 
