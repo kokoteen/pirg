@@ -1,3 +1,4 @@
+import os
 import subprocess
 from requests.exceptions import HTTPError
 import traceback
@@ -14,6 +15,7 @@ from packaging.version import parse, Version
 from packaging.specifiers import SpecifierSet
 from .models import Package
 
+REQUIREMENTS = "requirements.txt"
 PYPI_URL = lambda pkg_name: f"https://pypi.org/pypi/{pkg_name}/json"
 PY_VERSION = Version(sys.version.split()[0])
 
@@ -77,7 +79,7 @@ def get_name_version(package_names: set) -> set:
     return installed_pkgs
 
 
-def check_for_pip_args():
+def check_for_pip_args() -> set:
     try:
         dash_idx = sys.argv.index("--") + 1
         pip_args = set(sys.argv[dash_idx:])
@@ -87,13 +89,27 @@ def check_for_pip_args():
     return pip_args
 
 
+def find_requirements_file() -> Optional[str]:
+    current_dir = os.getcwd()
+    while True:
+        if REQUIREMENTS in os.listdir(current_dir):
+            return os.path.join(current_dir, REQUIREMENTS)
+
+        parent_dir = os.path.dirname(current_dir)
+        if parent_dir == current_dir:
+            break
+
+        current_dir = parent_dir
+    return None
+
+
 @main.command()
 def install(
     package_names: Annotated[Optional[List[str]], typer.Argument(help="List of packages")] = None,
-    requirements_path: Annotated[str, typer.Option()] = "./requirements.txt",
+    requirements_path: Annotated[str, typer.Option()] = find_requirements_file(),
 ) -> None:
     """
-    Installs [package_names] and puts them in the requirements file on [reqirements_path] location
+    Installs [package_names] and puts them in the requirements file on [requirements_path] location
 
     You can pass additional `pip install` arguments after "--".
 
@@ -132,10 +148,10 @@ def install(
 @main.command()
 def uninstall(
     package_names: Annotated[Optional[List[str]], typer.Argument()] = None,
-    requirements_path: str = "./requirements.txt",
+    requirements_path: Annotated[str, typer.Option()] = find_requirements_file(),
 ) -> None:
     """
-    Uninstalls [package_names] and removes them from the requirements file on [reqirements_path] location
+    Uninstalls [package_names] and removes them from the requirements file on [requirements_path] location
 
     You can pass additional `pip uninstall` arguments after "--".
 
