@@ -8,7 +8,7 @@ class Package:
     version: Version = None
 
     def __eq__(self, other) -> bool:
-        return self.name == other.name
+        return self.name == other.name and self.version == other.version
 
     def __hash__(self) -> int:
         return hash(self.name)
