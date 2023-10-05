@@ -2,7 +2,7 @@ import os
 import subprocess
 from requests.exceptions import HTTPError
 import traceback
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import sys
 
 from typing_extensions import Annotated
@@ -28,14 +28,17 @@ def decorative_print(msg: str) -> None:
     print(f"{'-' * num}pirg log{'-' * num}\n\t{msg}\n{'-' * num_end}pirg log end{'-' * num_end}")
 
 
-def parse_name(pkg: str) -> List[str]:
-    return pkg.strip().split("==")
+def parse_name(pkg: str) -> Tuple[str, Optional[str]]:
+    tmp_lst = pkg.strip().split("==")
+    name = tmp_lst.pop(0)
+    version = tmp_lst.pop() if tmp_lst else None
+    return name, version
 
 
 def create_requirements(
     package_names: set,
     requirements_loc: str,
-    flag: str = "a",
+    flag: str = "w",
 ) -> None:
     with open(requirements_loc, flag) as req_file:
         for pkg in package_names:
@@ -48,7 +51,7 @@ def load_requirements_file(requirements_loc: str) -> set:
         with open(requirements_loc, "r") as req_file:
             for line in req_file:
                 name, version = parse_name(line)
-                pkg = Package(name, version)
+                pkg = Package(name, Version(version))
                 requirements.add(pkg)
     except FileNotFoundError:
         decorative_print(f"{requirements_loc} file not found. Creating new one.")
@@ -58,21 +61,26 @@ def load_requirements_file(requirements_loc: str) -> set:
 
 def get_name_version(package_names: set) -> set:
     installed_pkgs = set()
-    for pkg_name in package_names:
+    for pkg in package_names:
+        pkg_name, pkg_version = parse_name(pkg)
+
         response = requests.get(PYPI_URL(pkg_name=pkg_name))
         response.raise_for_status()
         package_data = response.json()
 
         valid_versions = {
-            rel
+            Version(rel)
             for rel in package_data["releases"]
             for elem in package_data["releases"][rel]
             if elem["requires_python"] is not None
             and PY_VERSION in SpecifierSet(elem["requires_python"])
         }
 
-        version = max(valid_versions, key=parse)
-        version = Version(version)
+        pkg_version = Version(pkg_version) if pkg_version else None
+        if pkg_version in valid_versions:
+            version = pkg_version
+        else:
+            version = max(valid_versions)
 
         pkg_name_version = Package(pkg_name, version)
         installed_pkgs.add(pkg_name_version)
@@ -124,9 +132,16 @@ def install(
         current_pkgs = load_requirements_file(requirements_loc=requirements_path)
         new_pkgs = get_name_version(package_names=package_names)
         new_pkgs = new_pkgs - current_pkgs
-        create_requirements(package_names=new_pkgs, requirements_loc=requirements_path)
 
-        ins_pkgs = [p.name for p in new_pkgs]
+        # fmt: off
+        # check for update
+        current_pkgs = {c for c in current_pkgs for n in new_pkgs if c.name != n.name}
+        current_pkgs.update(new_pkgs)
+        # fmt: on
+
+        create_requirements(package_names=current_pkgs, requirements_loc=requirements_path)
+
+        ins_pkgs = [f"{p.name}=={p.version}" for p in new_pkgs]
 
         if not ins_pkgs and not pip_args:
             raise NothingToDo("Nothing to install")
@@ -166,11 +181,7 @@ def uninstall(
         new_pkgs = set([Package(name) for name in package_names])
         current_pkgs = load_requirements_file(requirements_loc=requirements_path)
         current_pkgs = current_pkgs - new_pkgs
-        create_requirements(
-            package_names=current_pkgs,
-            requirements_loc=requirements_path,
-            flag="w",
-        )
+        create_requirements(package_names=current_pkgs, requirements_loc=requirements_path)
 
         rm_pkgs = [p.name for p in new_pkgs]
 
