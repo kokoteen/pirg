@@ -77,6 +77,16 @@ def get_name_version(package_names: set) -> set:
     return installed_pkgs
 
 
+def check_for_pip_args():
+    try:
+        dash_idx = sys.argv.index("--") + 1
+        pip_args = set(sys.argv[dash_idx:])
+    except ValueError:
+        pip_args = set()
+
+    return pip_args
+
+
 @main.command()
 def install(
     package_names: Annotated[Optional[List[str]], typer.Argument(help="List of packages")] = None,
@@ -91,9 +101,7 @@ def install(
         `pirg install torch -- --index-url https://download.pytorch.org/whl/cu118`
 
     """
-    dash_idx = sys.argv.index("--") + 1
-    pip_args = set(sys.argv[dash_idx:])
-
+    pip_args = check_for_pip_args()
     package_names = set(package_names) - pip_args
 
     try:
@@ -135,9 +143,7 @@ def uninstall(
         `pirg uninstall torch -- -r requirements.txt --yes`
 
     """
-    dash_idx = sys.argv.index("--") + 1
-    pip_args = set(sys.argv[dash_idx:])
-
+    pip_args = check_for_pip_args()
     package_names = set(package_names) - pip_args
 
     try:
