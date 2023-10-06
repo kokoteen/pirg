@@ -40,7 +40,7 @@ def install(
 
     try:
         current_pkgs = load_requirements_file(requirements_loc=requirements_path)
-        new_pkgs = get_name_version(package_names=package_names)
+        new_pkgs = {get_name_version(package_name=pkg) for pkg in package_names}
         new_pkgs = new_pkgs - current_pkgs
 
         # fmt: off

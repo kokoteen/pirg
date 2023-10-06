@@ -49,32 +49,28 @@ def load_requirements_file(requirements_loc: str) -> set:
         return requirements
 
 
-def get_name_version(package_names: set) -> set:
-    installed_pkgs = set()
-    for pkg in package_names:
-        pkg_name, pkg_version = parse_name(pkg)
+def get_name_version(package_name: str) -> Package:
+    pkg_name, pkg_version = parse_name(package_name)
 
-        response = requests.get(PYPI_URL(pkg_name=pkg_name))
-        response.raise_for_status()
-        package_data = response.json()
+    response = requests.get(PYPI_URL(pkg_name=pkg_name))
+    response.raise_for_status()
+    package_data = response.json()
 
-        valid_versions = {
-            Version(rel)
-            for rel in package_data["releases"]
-            for elem in package_data["releases"][rel]
-            if elem["requires_python"] is not None
-            and PY_VERSION in SpecifierSet(elem["requires_python"])
-        }
+    valid_versions = {
+        Version(rel)
+        for rel in package_data["releases"]
+        for elem in package_data["releases"][rel]
+        if elem["requires_python"] is not None
+        and PY_VERSION in SpecifierSet(elem["requires_python"])
+    }
 
-        pkg_version = Version(pkg_version) if pkg_version else None
-        if pkg_version in valid_versions:
-            version = pkg_version
-        else:
-            version = max(valid_versions)
+    pkg_version = Version(pkg_version) if pkg_version else None
+    if pkg_version in valid_versions:
+        version = pkg_version
+    else:
+        version = max(valid_versions)
 
-        pkg_name_version = Package(pkg_name, version)
-        installed_pkgs.add(pkg_name_version)
-    return installed_pkgs
+    return Package(pkg_name, version)
 
 
 def check_for_pip_args() -> set:
