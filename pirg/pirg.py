@@ -1,114 +1,22 @@
-import os
 import subprocess
 from requests.exceptions import HTTPError
 import traceback
-from typing import List, Optional, Tuple
-import sys
-
+from typing import List, Optional
 from typing_extensions import Annotated
-
 from .custom_exceptions import NothingToDo
-
-import requests
 import typer
-from packaging.version import parse, Version
-from packaging.specifiers import SpecifierSet
 from .models import Package
+from .utils import (
+    check_for_pip_args,
+    find_requirements_file,
+    load_requirements_file,
+    decorative_print,
+    create_requirements,
+    get_name_version,
+)
 
-REQUIREMENTS = "requirements.txt"
-PYPI_URL = lambda pkg_name: f"https://pypi.org/pypi/{pkg_name}/json"
-PY_VERSION = Version(sys.version.split()[0])
 
 main = typer.Typer()
-
-
-def decorative_print(msg: str) -> None:
-    num = 50
-    num_end = num - 2
-    print(f"{'-' * num}pirg log{'-' * num}\n\t{msg}\n{'-' * num_end}pirg log end{'-' * num_end}")
-
-
-def parse_name(pkg: str) -> Tuple[str, Optional[str]]:
-    tmp_lst = pkg.strip().split("==")
-    name = tmp_lst.pop(0)
-    version = tmp_lst.pop() if tmp_lst else None
-    return name, version
-
-
-def create_requirements(
-    package_names: set,
-    requirements_loc: str,
-    flag: str = "w",
-) -> None:
-    with open(requirements_loc, flag) as req_file:
-        for pkg in package_names:
-            req_file.write(f"{pkg}\n")
-
-
-def load_requirements_file(requirements_loc: str) -> set:
-    requirements = set()
-    try:
-        with open(requirements_loc, "r") as req_file:
-            for line in req_file:
-                name, version = parse_name(line)
-                pkg = Package(name, Version(version))
-                requirements.add(pkg)
-    except FileNotFoundError:
-        decorative_print(f"{requirements_loc} file not found. Creating new one.")
-    finally:
-        return requirements
-
-
-def get_name_version(package_names: set) -> set:
-    installed_pkgs = set()
-    for pkg in package_names:
-        pkg_name, pkg_version = parse_name(pkg)
-
-        response = requests.get(PYPI_URL(pkg_name=pkg_name))
-        response.raise_for_status()
-        package_data = response.json()
-
-        valid_versions = {
-            Version(rel)
-            for rel in package_data["releases"]
-            for elem in package_data["releases"][rel]
-            if elem["requires_python"] is not None
-            and PY_VERSION in SpecifierSet(elem["requires_python"])
-        }
-
-        pkg_version = Version(pkg_version) if pkg_version else None
-        if pkg_version in valid_versions:
-            version = pkg_version
-        else:
-            version = max(valid_versions)
-
-        pkg_name_version = Package(pkg_name, version)
-        installed_pkgs.add(pkg_name_version)
-    return installed_pkgs
-
-
-def check_for_pip_args() -> set:
-    try:
-        dash_idx = sys.argv.index("--") + 1
-        pip_args = set(sys.argv[dash_idx:])
-    except ValueError:
-        pip_args = set()
-
-    return pip_args
-
-
-def find_requirements_file() -> Optional[str]:
-    current_dir = os.getcwd()
-    while True:
-        if REQUIREMENTS in os.listdir(current_dir):
-            return os.path.join(current_dir, REQUIREMENTS)
-
-        parent_dir = os.path.dirname(current_dir)
-        if parent_dir == current_dir:
-            break
-
-        current_dir = parent_dir
-    return None
 
 
 @main.command()
@@ -153,7 +61,7 @@ def install(
         pkg_name = e.args[0].split()[-1].split("/")[-2]
         decorative_print(f"Failed to find the latest version of {pkg_name} on PyPI")
         traceback.print_exc()
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         decorative_print("Failed to install packages")
         traceback.print_exc()
     except NothingToDo as e:
@@ -194,7 +102,7 @@ def uninstall(
         pkg_name = e.args[0].split()[-1].split("/")[-2]
         decorative_print(f"Failed to find the latest version of {pkg_name} on PyPI")
         traceback.print_exc()
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         decorative_print("Failed to remove packages")
         traceback.print_exc()
     except NothingToDo as e:
