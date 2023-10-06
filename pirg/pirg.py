@@ -43,8 +43,9 @@ def install(
 
         # fmt: off
         # check for update
-        current_pkgs = {c for c in current_pkgs for n in new_pkgs if c.name != n.name}
-        current_pkgs.update(new_pkgs)
+        all_req_pkgs = {c for c in current_pkgs for n in new_pkgs if c.name != n.name}
+        all_req_pkgs.update(new_pkgs)
+        create_requirements(package_names=all_req_pkgs, requirements_loc=requirements_path)
         # fmt: on
 
         create_requirements(package_names=current_pkgs, requirements_loc=requirements_path)
