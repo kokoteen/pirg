@@ -1,4 +1,6 @@
 import os
+import sys
+import responses
 import pytest
 from pirg.pirg import (
     create_requirements,
@@ -80,3 +82,17 @@ def test_find_requirements_file(tmpdir):
 
     for pkg, pkg_name in zip(installed_pkgs, package_names):
         assert pkg_name == pkg.name
+def test_check_for_pip_args(monkeypatch):
+    test_argv = ["script_name", "arg1", "arg2", "--", "pip_arg1", "pip_arg2"]
+
+    monkeypatch.setattr(sys, "argv", test_argv)
+
+    result = check_for_pip_args()
+
+    assert result == {"pip_arg1", "pip_arg2"}
+
+    test_argv = ["script_name", "arg1", "arg2", "--"]
+    monkeypatch.setattr(sys, "argv", test_argv)
+    result = check_for_pip_args()
+    assert result == set()
+
