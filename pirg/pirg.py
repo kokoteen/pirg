@@ -87,8 +87,12 @@ def uninstall(
     package_names = set(package_names) - pip_args
 
     try:
-        new_pkgs = set([Package(name) for name in package_names])
+        package_names = [parse_name(val) for val in package_names]
+        new_pkgs = set([Package(name, version) for name, version in package_names])
         current_pkgs = load_requirements_file(requirements_loc=requirements_path)
+
+        # repopulate version from requirements.txt
+        new_pkgs = {c for c in current_pkgs for n in new_pkgs if c.name == n.name}
         current_pkgs = current_pkgs - new_pkgs
         create_requirements(package_names=current_pkgs, requirements_loc=requirements_path)
 
