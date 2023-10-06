@@ -3,8 +3,8 @@ from requests.exceptions import HTTPError
 import traceback
 from typing import List, Optional
 from typing_extensions import Annotated
-from .custom_exceptions import NothingToDo
 import typer
+from .custom_exceptions import NothingToDo
 from .models import Package
 from .utils import (
     check_for_pip_args,
@@ -13,6 +13,8 @@ from .utils import (
     decorative_print,
     create_requirements,
     get_name_version,
+    parse_name,
+    run_subprocess,
 )
 
 
@@ -48,16 +50,12 @@ def install(
         create_requirements(package_names=all_req_pkgs, requirements_loc=requirements_path)
         # fmt: on
 
-        create_requirements(package_names=current_pkgs, requirements_loc=requirements_path)
-
         ins_pkgs = [f"{p.name}=={p.version}" for p in new_pkgs]
 
         if not ins_pkgs and not pip_args:
             raise NothingToDo("Nothing to install")
 
-        subprocess.run(["pip", "install"] + ins_pkgs + list(pip_args), check=True)
-        decorative_print(f"Installed packages {ins_pkgs}")
-
+        run_subprocess(pkgs=ins_pkgs, pip_command="install", pip_args=list(pip_args))
     except HTTPError as e:
         pkg_name = e.args[0].split()[-1].split("/")[-2]
         decorative_print(f"Failed to find the latest version of {pkg_name} on PyPI")
@@ -101,8 +99,7 @@ def uninstall(
         if not rm_pkgs and not pip_args:
             raise NothingToDo("Nothing to remove")
 
-        subprocess.run(["pip", "uninstall"] + rm_pkgs + list(pip_args), check=True)
-        decorative_print(f"Removed packages {rm_pkgs}")
+        run_subprocess(pkgs=rm_pkgs, pip_command="uninstall", pip_args=list(pip_args))
     except HTTPError as e:
         pkg_name = e.args[0].split()[-1].split("/")[-2]
         decorative_print(f"Failed to find the latest version of {pkg_name} on PyPI")

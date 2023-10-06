@@ -1,10 +1,11 @@
-from .models import Package
 import sys
 import os
 from packaging.version import Version
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 import requests
 from packaging.specifiers import SpecifierSet
+import subprocess
+from .models import Package
 
 PYPI_URL = lambda pkg_name: f"https://pypi.org/pypi/{pkg_name}/json"
 PY_VERSION = Version(sys.version.split()[0])
@@ -98,3 +99,8 @@ def find_requirements_file() -> Optional[str]:
 
         current_dir = parent_dir
     return None
+
+
+def run_subprocess(pkgs: List[str], pip_command: str, pip_args: List[str]):
+    subprocess.run(["pip", pip_command] + pkgs + pip_args, check=True)
+    decorative_print(f"{pip_command.capitalize()}ed packages: {pkgs}")
