@@ -1,4 +1,6 @@
 import subprocess
+import sys
+
 from requests.exceptions import HTTPError
 import traceback
 from typing import List, Optional
@@ -60,11 +62,14 @@ def install(
         pkg_name = e.args[0].split()[-1].split("/")[-2]
         decorative_print(f"Failed to find the latest version of {pkg_name} on PyPI")
         traceback.print_exc()
-    except subprocess.CalledProcessError:
+        sys.exit(e.response.status_code)
+    except subprocess.CalledProcessError as e:
         decorative_print("Failed to install packages")
         traceback.print_exc()
+        sys.exit(e.returncode)
     except NothingToDo as e:
         decorative_print(str(e))
+        sys.exit(e.exit_code)
 
 
 @main.command()
@@ -104,11 +109,14 @@ def uninstall(
         pkg_name = e.args[0].split()[-1].split("/")[-2]
         decorative_print(f"Failed to find the latest version of {pkg_name} on PyPI")
         traceback.print_exc()
-    except subprocess.CalledProcessError:
+        sys.exit(e.response.status_code)
+    except subprocess.CalledProcessError as e:
         decorative_print("Failed to remove packages")
         traceback.print_exc()
+        sys.exit(e.returncode)
     except NothingToDo as e:
         decorative_print(str(e))
+        sys.exit(e.exit_code)
 
 
 if __name__ == "__main__":

@@ -2,15 +2,12 @@ import os
 import sys
 import responses
 import pytest
-from pirg.pirg import (
-    create_requirements,
 from pirg.utils import (
     PYPI_URL,
     check_for_pip_args,
     load_requirements_file,
     get_name_version,
     create_requirements,
-    run_subprocess,
     find_requirements_file,
 )
 
@@ -44,8 +41,6 @@ def test_load_requirements_file(temporary_requirements_file):
 
 
 def test_get_name_version():
-    package_names = {"numpy", "pandas"}
-    installed_pkgs = get_name_version(package_names)
     package_name = ["package1"]
     mock_response_body = {
         "releases": {
@@ -80,8 +75,6 @@ def test_find_requirements_file(tmpdir):
     assert find_requirements_file() is None
 
 
-    for pkg, pkg_name in zip(installed_pkgs, package_names):
-        assert pkg_name == pkg.name
 def test_check_for_pip_args(monkeypatch):
     test_argv = ["script_name", "arg1", "arg2", "--", "pip_arg1", "pip_arg2"]
 
@@ -95,4 +88,3 @@ def test_check_for_pip_args(monkeypatch):
     monkeypatch.setattr(sys, "argv", test_argv)
     result = check_for_pip_args()
     assert result == set()
-
