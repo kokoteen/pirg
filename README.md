@@ -12,7 +12,7 @@
 With PiRG, you can also pass additional `pip install` or `pip uninstall` options to customize package installation and removal.
 
 ### Philosophy
-Instead of looking back and searching through projects files which packages are needed for project, with PiRG you record each installed packeg. If you don't want to put some package into `requirements.txt` just use `pip`.
+Instead of looking back and searching through project files which packages are needed for project, with PiRG you record each installed packeg. If you don't want to put some package into `requirements.txt` just use `pip`.
 ## Installation
 
 ### Prerequisites
