@@ -80,7 +80,7 @@ def test_uninstall(tmpdir, monkeypatch):
     # test uninstalling with pip arguments but no packages specified
     with pytest.raises(SystemExit) as excinfo:
         uninstall(package_names=[], requirements_path=requirements_file.strpath)
-    assert excinfo.value.code == 1
+    assert excinfo.value.code == 4000
     monkeypatch.setattr(sys, "argv", [])
 
     # test wrong package name
