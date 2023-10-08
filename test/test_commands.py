@@ -1,22 +1,8 @@
-import subprocess
-import os
 import sys
-import responses
 import requests
 import pytest
 from requests import HTTPError
-
 from pirg.pirg import install
-from pirg.custom_exceptions import NothingToDo
-from pirg.utils import (
-    PYPI_URL,
-    check_for_pip_args,
-    load_requirements_file,
-    get_name_version,
-    create_requirements,
-    run_subprocess,
-    find_requirements_file,
-)
 
 
 def mock_get_name_version(package_name):
