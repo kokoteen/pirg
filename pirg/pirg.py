@@ -101,7 +101,7 @@ def uninstall(
 
         rm_pkgs = [p.name for p in new_pkgs]
 
-        if not rm_pkgs and not pip_args:
+        if not rm_pkgs:
             raise NothingToDo("Nothing to remove")
 
         run_subprocess(pkgs=rm_pkgs, pip_command="uninstall", pip_args=list(pip_args))
