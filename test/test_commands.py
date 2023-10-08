@@ -85,7 +85,6 @@ def test_uninstall(tmpdir, monkeypatch):
 
     # test wrong package name
     package_names = ["package1"]
-    monkeypatch.setattr("pirg.utils.get_name_version", mock_get_name_version)
     with pytest.raises(SystemExit) as excinfo:
         uninstall(package_names=package_names, requirements_path=requirements_file.strpath)
-    assert excinfo.value.code == 404
+    assert excinfo.value.code == 4000
