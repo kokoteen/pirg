@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from packaging.version import Version
+from typing import Optional
 
 
 @dataclass
 class Package:
     name: str
-    version: Version = None
+    version: Optional[Version] = None
 
     def __eq__(self, other) -> bool:
         return self.name == other.name and self.version == other.version
