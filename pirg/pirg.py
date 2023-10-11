@@ -6,7 +6,7 @@ import traceback
 from typing import List, Optional
 from typing_extensions import Annotated
 import typer
-from .custom_exceptions import NothingToDo
+from .custom_exceptions import NothingToDo, DisabledPipFlag
 from .models import Package
 from .utils import (
     check_for_pip_args,
@@ -76,6 +76,7 @@ def install(
 def uninstall(
     package_names: Annotated[Optional[List[str]], typer.Argument()] = None,
     requirements_path: Annotated[str, typer.Option()] = check_for_requirements_file(),
+    delete_all: Annotated[bool, typer.Option()] = False,
 ) -> None:
     """
     Uninstalls [package_names] and removes them from the requirements file on [requirements_path] location
@@ -86,13 +87,16 @@ def uninstall(
         `pirg uninstall torch -- -r requirements.txt --yes`
 
     """
-    pip_args = check_for_pip_args()
-    package_names = set(package_names) - pip_args
-
     try:
+        pip_args = check_for_pip_args()
+        package_names = set(package_names) - pip_args
+
         package_names = [parse_name(val) for val in package_names]
         new_pkgs = set([Package(name, version) for name, version in package_names])
         current_pkgs = load_requirements_file(requirements_loc=requirements_path)
+
+        if delete_all:
+            new_pkgs.update(current_pkgs)
 
         # repopulate version from requirements.txt
         new_pkgs = {c for c in current_pkgs for n in new_pkgs if c.name == n.name}
@@ -101,7 +105,8 @@ def uninstall(
 
         rm_pkgs = [p.name for p in new_pkgs]
 
-        if not rm_pkgs:
+        skip_pip_args = {"-h", "--help"}
+        if not rm_pkgs and not delete_all and not bool(skip_pip_args & pip_args):
             raise NothingToDo("Nothing to remove")
 
         run_subprocess(pkgs=rm_pkgs, pip_command="uninstall", pip_args=list(pip_args))
@@ -115,6 +120,9 @@ def uninstall(
         traceback.print_exc()
         sys.exit(e.returncode)
     except NothingToDo as e:
+        decorative_print(str(e))
+        sys.exit(e.exit_code)
+    except DisabledPipFlag as e:
         decorative_print(str(e))
         sys.exit(e.exit_code)
 

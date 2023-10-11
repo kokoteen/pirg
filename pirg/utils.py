@@ -6,6 +6,7 @@ import requests
 from packaging.specifiers import SpecifierSet
 import subprocess
 from .models import Package
+from .custom_exceptions import DisabledPipFlag
 
 PYPI_URL = lambda pkg_name: f"https://pypi.org/pypi/{pkg_name}/json"
 PY_VERSION = Version(sys.version.split()[0])
@@ -79,6 +80,10 @@ def check_for_pip_args() -> set:
         pip_args = set(sys.argv[dash_idx:])
     except ValueError:
         pip_args = set()
+
+    disable = {"-r", "--requirements"}
+    if bool(disable & pip_args):
+        raise DisabledPipFlag(f"{disable} is disabled")
 
     return pip_args
 
