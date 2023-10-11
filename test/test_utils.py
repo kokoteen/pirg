@@ -8,7 +8,7 @@ from pirg.utils import (
     load_requirements_file,
     get_name_version,
     create_requirements,
-    find_requirements_file,
+    check_for_requirements_file,
 )
 
 
@@ -32,6 +32,9 @@ def test_create_requirements(temporary_requirements_file):
         assert "package1==1.0.0\n" not in lines
         assert "package2==2.0.0\n" in lines
         assert "package3==3.0.0\n" in lines
+
+    # test when no file is provided
+    create_requirements(package_names, None)
 
 
 def test_load_requirements_file(temporary_requirements_file):
@@ -61,7 +64,7 @@ def test_get_name_version():
             assert str(result.version) == "1.2.0"
 
 
-def test_find_requirements_file(tmpdir):
+def test_check_for_requirements_file(tmpdir):
     root_dir = tmpdir.mkdir("project")
     sub_dir1 = root_dir.mkdir("subdirectory1")
     sub_dir2 = sub_dir1.mkdir("subdirectory2")
@@ -69,10 +72,10 @@ def test_find_requirements_file(tmpdir):
     root_dir.join("requirements.txt").write("Test requirements file content")
 
     os.chdir(str(sub_dir2))
-    assert find_requirements_file() == str(root_dir.join("requirements.txt"))
+    assert check_for_requirements_file() == str(root_dir.join("requirements.txt"))
 
-    os.chdir(str(tmpdir))
-    assert find_requirements_file() is None
+    os.chdir(str(root_dir))
+    assert check_for_requirements_file() == os.path.join(root_dir, "requirements.txt")
 
 
 def test_check_for_pip_args(monkeypatch):

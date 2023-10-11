@@ -83,7 +83,7 @@ def check_for_pip_args() -> set:
     return pip_args
 
 
-def find_requirements_file() -> Optional[str]:
+def check_for_requirements_file() -> str:
     current_dir = os.getcwd()
     while True:
         if REQUIREMENTS in os.listdir(current_dir):
@@ -94,7 +94,8 @@ def find_requirements_file() -> Optional[str]:
             break
 
         current_dir = parent_dir
-    return None
+
+    return os.path.join(os.getcwd(), REQUIREMENTS)
 
 
 def run_subprocess(pkgs: List[str], pip_command: str, pip_args: List[str]):
