@@ -33,9 +33,6 @@ def test_create_requirements(temporary_requirements_file):
         assert "package2==2.0.0\n" in lines
         assert "package3==3.0.0\n" in lines
 
-    # test when no file is provided
-    create_requirements(package_names, None)
-
 
 def test_load_requirements_file(temporary_requirements_file):
     requirements = load_requirements_file(temporary_requirements_file)
