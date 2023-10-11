@@ -58,6 +58,7 @@ def test_uninstall(tmpdir, monkeypatch):
 
     monkeypatch.setattr("pirg.utils.load_requirements_file", lambda x: set())
     monkeypatch.setattr("pirg.utils.run_subprocess", lambda pkgs, cmd, args: None)
+    # FIXME: mock run_subprocess
 
     # create requirements file
     install(package_names=package_names, requirements_path=requirements_file.strpath)
@@ -72,15 +73,23 @@ def test_uninstall(tmpdir, monkeypatch):
         uninstall(package_names=package_names, requirements_path=requirements_file.strpath)
     assert excinfo.value.code == 4000
 
+    # test uninstalling all from requirements
+    monkeypatch.setattr(sys, "argv", [])
+    install(package_names=package_names, requirements_path=requirements_file.strpath)
+    monkeypatch.setattr(sys, "argv", ["--", "-y"])
+    uninstall(package_names=[], requirements_path=requirements_file.strpath, delete_all=True)
+    assert os.path.getsize(requirements_file) == 0
+
     # test uninstalling with no packages specified (nothing to uninstall)
     with pytest.raises(SystemExit) as excinfo:
         uninstall(package_names=[], requirements_path=requirements_file.strpath)
     assert excinfo.value.code == 4000
 
-    # test uninstalling with pip arguments but no packages specified
+    # test uninstalling with pip disabled arguments but no packages specified
+    monkeypatch.setattr(sys, "argv", ["--", "-r", f"{requirements_file.strpath}"])
     with pytest.raises(SystemExit) as excinfo:
         uninstall(package_names=[], requirements_path=requirements_file.strpath)
-    assert excinfo.value.code == 4000
+    assert excinfo.value.code == 4001
     monkeypatch.setattr(sys, "argv", [])
 
     # test wrong package name
