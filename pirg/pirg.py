@@ -10,7 +10,7 @@ from .custom_exceptions import NothingToDo, DisabledPipFlag
 from .models import Package
 from .utils import (
     check_for_pip_args,
-    find_requirements_file,
+    check_for_requirements_file,
     load_requirements_file,
     decorative_print,
     create_requirements,
@@ -26,7 +26,7 @@ main = typer.Typer()
 @main.command()
 def install(
     package_names: Annotated[Optional[List[str]], typer.Argument(help="List of packages")] = None,
-    requirements_path: Annotated[str, typer.Option()] = find_requirements_file(),
+    requirements_path: Annotated[str, typer.Option()] = check_for_requirements_file(),
 ) -> None:
     """
     Installs [package_names] and puts them in the requirements file on [requirements_path] location
@@ -75,7 +75,7 @@ def install(
 @main.command()
 def uninstall(
     package_names: Annotated[Optional[List[str]], typer.Argument()] = None,
-    requirements_path: Annotated[str, typer.Option()] = find_requirements_file(),
+    requirements_path: Annotated[str, typer.Option()] = check_for_requirements_file(),
     delete_all: Annotated[bool, typer.Option()] = False,
 ) -> None:
     """
