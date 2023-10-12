@@ -36,11 +36,11 @@ def test_install(tmpdir, monkeypatch):
         install(package_names=[], requirements_path=requirements_file.strpath)
     assert excinfo.value.code == 4000
 
-    # test installing with pip arguments but no packages specified
+    # test installing with disabled pip arguments but no packages specified
     monkeypatch.setattr(sys, "argv", ["--", "-U"])
     with pytest.raises(SystemExit) as excinfo:
         install(package_names=[], requirements_path=requirements_file.strpath)
-    assert excinfo.value.code == 1
+    assert excinfo.value.code == 4001
     monkeypatch.setattr(sys, "argv", [])
 
     # test wrong package name
