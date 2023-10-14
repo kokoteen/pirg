@@ -1,11 +1,12 @@
 import subprocess
 import sys
-
-from requests.exceptions import HTTPError
+import typer
 import traceback
+
+from importlib import metadata
+from requests.exceptions import HTTPError
 from typing import List, Optional
 from typing_extensions import Annotated
-import typer
 from .custom_exceptions import NothingToDo, DisabledPipFlag, WrongPkgName, WrongSpecifierSet
 from .models import Package
 from .utils import (
@@ -19,8 +20,23 @@ from .utils import (
     run_subprocess,
 )
 
+__version__ = metadata.version("pirg")
 
 main = typer.Typer()
+
+
+def version_callback(value: bool):
+    if value:
+        typer.echo(f"{__version__}")
+        raise typer.Exit()
+
+
+@main.callback()
+def common(
+    ctx: typer.Context,
+    version: bool = typer.Option(None, "--version", callback=version_callback),
+):
+    pass
 
 
 @main.command()
