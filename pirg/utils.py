@@ -4,13 +4,14 @@ import re
 from packaging.version import Version
 from typing import Optional, Tuple, List, Set
 import requests
-from packaging.specifiers import SpecifierSet
+from packaging.specifiers import SpecifierSet, Specifier
 import subprocess
 from .models import Package
-from .custom_exceptions import DisabledPipFlag, WrongPkgName
+from .custom_exceptions import DisabledPipFlag, WrongPkgName, WrongSpecifierSet
 
 PYPI_URL = lambda pkg_name: f"https://pypi.org/pypi/{pkg_name}/json"
 PY_VERSION = Version(sys.version.split()[0])
+PARSE_PATTERN = r"^(?P<name>[a-zA-Z0-9_-]+)(\[(?P<suffix>[a-zA-Z0-9_-]+)\])?(?P<specifier_set>.*)"
 REQUIREMENTS = "requirements.txt"
 
 
@@ -20,8 +21,8 @@ def decorative_print(msg: str) -> None:
     print(f"{'-' * num}pirg log{'-' * num}\n\t{msg}\n{'-' * num_end}pirg log end{'-' * num_end}")
 
 
-def parse_package_name(pkg: str) -> Tuple[str, Optional[str], Optional[str], Optional[str]]:
-    pattern = r"^(?P<name>[a-zA-Z0-9_-]+)(\[(?P<suffix>[a-zA-Z0-9_-]+)\])?(?P<specifier>[<>=<=!>=]+)?(?P<version>(?:\d+(\.\d+){0,2}))?$"
+def parse_package_name(pkg: str) -> Tuple[str, Optional[str], Optional[str]]:
+    pattern = PARSE_PATTERN
 
     match = re.match(pattern, pkg)
     if not match:
@@ -31,20 +32,19 @@ def parse_package_name(pkg: str) -> Tuple[str, Optional[str], Optional[str], Opt
 
     name = package_data["name"]
     suffix = package_data["suffix"]
-    specifier = package_data["specifier"]
-    version = package_data["version"]
+    specifier_set = package_data["specifier_set"]
 
-    return name, suffix, specifier, version
+    return name, suffix, specifier_set
 
 
 def create_requirements(
-    package_names: set,
+    package_names: Set[Package],
     requirements_loc: str,
     flag: str = "w",
 ) -> None:
     with open(requirements_loc, flag) as req_file:
         for pkg in package_names:
-            req_file.write(f"{pkg}\n")
+            req_file.write(f"{str(pkg)}\n")
 
 
 def load_requirements_file(requirements_loc: str) -> Set[Package]:
@@ -52,42 +52,45 @@ def load_requirements_file(requirements_loc: str) -> Set[Package]:
     try:
         with open(requirements_loc, "r") as req_file:
             for line in req_file:
-                name, suffix, specifier, version = parse_package_name(line)
+                name, suffix, specifier_set = parse_package_name(line)
                 pkg = Package(
                     name=name,
                     suffix=suffix,
-                    specifier=specifier,
-                    version=Version(version),
+                    specifier_set=specifier_set,
                 )
                 requirements.add(pkg)
     except FileNotFoundError:
-        decorative_print(f"{requirements_loc} file not found. Creating new one.")
+        decorative_print(f"{requirements_loc} file not found. Creating new one")
     finally:
         return requirements
 
 
 def get_name_version(package_name: str) -> Package:
-    pkg_name, pkg_suffix, pkg_specifier, pkg_version = parse_package_name(package_name)
+    pkg_name, pkg_suffix, pkg_specifier_set = parse_package_name(package_name)
 
     response = requests.get(PYPI_URL(pkg_name=pkg_name))
     response.raise_for_status()
     package_data = response.json()
 
     valid_versions = {
-        Version(rel)
+        Specifier(f"=={rel}")
         for rel in package_data["releases"]
         for elem in package_data["releases"][rel]
         if elem["requires_python"] is not None
         and PY_VERSION in SpecifierSet(elem["requires_python"])
     }
 
-    pkg_version = Version(pkg_version) if pkg_version else None
-    if pkg_version in valid_versions:
-        version = pkg_version
+    pkg_specifier_set = SpecifierSet(pkg_specifier_set) if pkg_specifier_set else None
+    if pkg_specifier_set:
+        specifier_set = {
+            pkg_specifier_set for vv in valid_versions if vv.version in pkg_specifier_set
+        }.pop()
+        if not specifier_set:
+            raise WrongSpecifierSet(f"Not valid specifier set: {pkg_specifier_set}")
     else:
-        version = max(valid_versions)
+        specifier_set = max(valid_versions, key=str)
 
-    return Package(name=pkg_name, suffix=pkg_suffix, specifier=pkg_specifier, version=version)
+    return Package(name=pkg_name, suffix=pkg_suffix, specifier_set=specifier_set)
 
 
 def check_for_pip_args() -> Set[str]:

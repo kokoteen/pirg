@@ -58,7 +58,7 @@ def test_get_name_version():
             result = get_name_version(pkg)
 
             assert result.name == pkg
-            assert str(result.version) == "1.2.0"
+            assert str(result.specifier_set) == "==1.2.0"
 
 
 def test_check_for_requirements_file(tmpdir):
