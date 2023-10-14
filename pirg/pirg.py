@@ -6,7 +6,7 @@ import traceback
 from typing import List, Optional
 from typing_extensions import Annotated
 import typer
-from .custom_exceptions import NothingToDo, DisabledPipFlag, WrongPkgName
+from .custom_exceptions import NothingToDo, DisabledPipFlag, WrongPkgName, WrongSpecifierSet
 from .models import Package
 from .utils import (
     check_for_pip_args,
@@ -26,7 +26,7 @@ main = typer.Typer()
 @main.command()
 def install(
     package_names: Annotated[Optional[List[str]], typer.Argument(help="List of packages")] = None,
-    requirements_path: Annotated[str, typer.Option()] = check_for_requirements_file(),    
+    requirements_path: Annotated[str, typer.Option()] = check_for_requirements_file(),
     update_all: Annotated[bool, typer.Option()] = False,
 ) -> None:
     """
@@ -57,7 +57,7 @@ def install(
             update_current_pkgs = {c for c in current_pkgs for n in new_pkgs if c.name != n.name}
             update_current_pkgs.update(new_pkgs)
 
-        ins_pkgs = [f"{p.name}=={p.version}" for p in new_pkgs]
+        ins_pkgs = [f"{str(p)}" for p in new_pkgs]
 
         skip_pip_args = {"-h", "--help"}
         if not ins_pkgs and not update_all and not bool(skip_pip_args & pip_args):
@@ -74,7 +74,7 @@ def install(
         decorative_print("Failed to install packages")
         traceback.print_exc()
         sys.exit(e.returncode)
-    except (NothingToDo, DisabledPipFlag, WrongPkgName) as e:
+    except (NothingToDo, DisabledPipFlag, WrongPkgName, WrongSpecifierSet) as e:
         decorative_print(str(e))
         sys.exit(e.exit_code)
 
@@ -97,15 +97,10 @@ def uninstall(
     try:
         pip_args = check_for_pip_args()
         package_names = set(package_names) - pip_args
-        print(package_names)
 
         package_names = [parse_package_name(val) for val in package_names]
-        new_pkgs = set(
-            [Package(name=name, version=version) for name, _, _, version in package_names]
-        )
-        print(new_pkgs)
+        new_pkgs = set([Package(n, sf, ss) for n, sf, ss in package_names])
         current_pkgs = load_requirements_file(requirements_loc=requirements_path)
-        print(current_pkgs)
 
         if delete_all:
             new_pkgs.update(current_pkgs)
@@ -113,7 +108,6 @@ def uninstall(
         # repopulate version from requirements.txt
         new_pkgs = {c for c in current_pkgs for n in new_pkgs if c.name == n.name}
         current_pkgs = current_pkgs - new_pkgs
-        print(current_pkgs)
 
         rm_pkgs = [p.name for p in new_pkgs]
 
@@ -132,7 +126,7 @@ def uninstall(
         decorative_print("Failed to remove packages")
         traceback.print_exc()
         sys.exit(e.returncode)
-    except (NothingToDo, DisabledPipFlag, WrongPkgName) as e:
+    except (NothingToDo, DisabledPipFlag, WrongPkgName, WrongSpecifierSet) as e:
         decorative_print(str(e))
         sys.exit(e.exit_code)
 
