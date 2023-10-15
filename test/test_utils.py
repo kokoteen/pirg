@@ -3,7 +3,7 @@ import sys
 import responses
 import pytest
 from packaging.specifiers import SpecifierSet
-from pirg.custom_exceptions import DisabledPipFlag
+from pirg.custom_exceptions import DisabledPipFlag, WrongSpecifierSet, WrongPkgName
 from pirg.models import Package
 from pirg.utils import (
     PYPI_URL,
@@ -12,6 +12,7 @@ from pirg.utils import (
     get_name_version,
     create_requirements,
     check_for_requirements_file,
+    parse_package_name,
 )
 
 
@@ -135,3 +136,27 @@ def test_check_for_pip_args(monkeypatch):
     monkeypatch.setattr(sys, "argv", test_argv)
     with pytest.raises(DisabledPipFlag):
         result = check_for_pip_args()
+
+
+def test_parse_package_name():
+    package_name = "SomePackage[suffix]>=2.0.0,<=1.0.0"
+    pkg_name, pkg_suffix, pkg_specifier_set = parse_package_name(package_name)
+    assert pkg_name == "SomePackage"
+    assert pkg_suffix == "suffix"
+    assert pkg_specifier_set == ">=2.0.0,<=1.0.0"
+
+    package_name = "[suffix]>=2.0.0,<=1.0.0"
+    with pytest.raises(WrongPkgName):
+        _, _, _ = parse_package_name(package_name)
+
+    package_name = "SomePackage>=2.0.0"
+    pkg_name, pkg_suffix, pkg_specifier_set = parse_package_name(package_name)
+    assert pkg_name == "SomePackage"
+    assert not pkg_suffix
+    assert pkg_specifier_set == ">=2.0.0"
+
+    package_name = "SomePackage"
+    pkg_name, pkg_suffix, pkg_specifier_set = parse_package_name(package_name)
+    assert pkg_name == "SomePackage"
+    assert not pkg_suffix
+    assert not pkg_specifier_set
