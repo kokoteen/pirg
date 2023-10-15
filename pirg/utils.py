@@ -63,7 +63,7 @@ def load_requirements_file(requirements_loc: str) -> Set[Package]:
                     specifier_set=specifier_set,
                 )
                 requirements.add(pkg)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         decorative_print(f"File '{requirements_loc}' not found. Creating new one")
     finally:
         return requirements

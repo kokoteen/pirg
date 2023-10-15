@@ -52,9 +52,14 @@ def test_create_requirements(temporary_requirements_file):
 
 
 def test_load_requirements_file(temporary_requirements_file):
+    # test with file
     requirements = load_requirements_file(temporary_requirements_file)
     assert len(requirements) == 1
     assert "package1" in [pkg.name for pkg in requirements]
+
+    # test empty file location
+    requirements = load_requirements_file("")
+    assert not requirements
 
 
 def test_get_name_version():
