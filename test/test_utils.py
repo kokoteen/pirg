@@ -3,6 +3,7 @@ import sys
 import responses
 import pytest
 from packaging.specifiers import SpecifierSet
+from pirg.custom_exceptions import DisabledPipFlag
 from pirg.models import Package
 from pirg.utils import (
     PYPI_URL,
@@ -88,25 +89,49 @@ def test_check_for_requirements_file(tmpdir):
     sub_dir1 = root_dir.mkdir("subdirectory1")
     sub_dir2 = sub_dir1.mkdir("subdirectory2")
 
-    root_dir.join("requirements.txt").write("Test requirements file content")
+    sub_dir1.join("requirements.txt").write("Test requirements file content")
 
+    # test if file is in sub_dir1
     os.chdir(str(sub_dir2))
-    assert check_for_requirements_file() == str(root_dir.join("requirements.txt"))
+    assert check_for_requirements_file() == sub_dir1.join("requirements.txt")
 
+    # test if the current directory is default option if there is no file
     os.chdir(str(root_dir))
     assert check_for_requirements_file() == os.path.join(root_dir, "requirements.txt")
 
 
 def test_check_for_pip_args(monkeypatch):
     test_argv = ["script_name", "arg1", "arg2", "--", "pip_arg1", "pip_arg2"]
-
     monkeypatch.setattr(sys, "argv", test_argv)
-
     result = check_for_pip_args()
-
     assert result == {"pip_arg1", "pip_arg2"}
 
     test_argv = ["script_name", "arg1", "arg2", "--"]
     monkeypatch.setattr(sys, "argv", test_argv)
     result = check_for_pip_args()
-    assert result == set()
+    assert not result
+
+    test_argv = ["script_name", "arg1", "arg2"]
+    monkeypatch.setattr(sys, "argv", test_argv)
+    result = check_for_pip_args()
+    assert not result
+
+    test_argv = ["--"]
+    monkeypatch.setattr(sys, "argv", test_argv)
+    result = check_for_pip_args()
+    assert not result
+
+    test_argv = []
+    monkeypatch.setattr(sys, "argv", test_argv)
+    result = check_for_pip_args()
+    assert not result
+
+    test_argv = []
+    monkeypatch.setattr(sys, "argv", test_argv)
+    result = check_for_pip_args()
+    assert not result
+
+    test_argv = ["--", "-r", "requirements.txt"]
+    monkeypatch.setattr(sys, "argv", test_argv)
+    with pytest.raises(DisabledPipFlag):
+        result = check_for_pip_args()
