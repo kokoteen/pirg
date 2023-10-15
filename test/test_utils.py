@@ -2,6 +2,8 @@ import os
 import sys
 import responses
 import pytest
+from packaging.specifiers import SpecifierSet
+from pirg.models import Package
 from pirg.utils import (
     PYPI_URL,
     check_for_pip_args,
@@ -24,14 +26,29 @@ def temporary_requirements_file(tmpdir):
 
 
 def test_create_requirements(temporary_requirements_file):
-    package_names = {"package2==2.0.0", "package3==3.0.0"}
-    create_requirements(package_names, temporary_requirements_file)
+    package_names = {
+        Package(name="package2", specifier_set=SpecifierSet("==2.0.0")),
+        Package(name="package3", specifier_set=SpecifierSet("==3.0.0")),
+    }
 
+    # test when there are packages and the file is provided
+    create_requirements(package_names, temporary_requirements_file)
     with open(temporary_requirements_file, "r") as req_file:
         lines = req_file.readlines()
         assert "package1==1.0.0\n" not in lines
         assert "package2==2.0.0\n" in lines
         assert "package3==3.0.0\n" in lines
+
+    # test if requirements file is empty when there are no packages
+    create_requirements(set(), temporary_requirements_file)
+    with open(temporary_requirements_file, "r") as req_file:
+        lines = req_file.readlines()
+        assert not lines
+
+    # test when the file is not provided
+    with pytest.raises(SystemExit) as excinfo:
+        create_requirements(set(), "")
+    assert excinfo.value.code == 2
 
 
 def test_load_requirements_file(temporary_requirements_file):

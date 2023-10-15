@@ -42,9 +42,13 @@ def create_requirements(
     requirements_loc: str,
     flag: str = "w",
 ) -> None:
-    with open(requirements_loc, flag) as req_file:
-        for pkg in package_names:
-            req_file.write(f"{str(pkg)}\n")
+    try:
+        with open(requirements_loc, flag) as req_file:
+            for pkg in package_names:
+                req_file.write(f"{str(pkg)}\n")
+    except FileNotFoundError as e:
+        decorative_print(f"File '{requirements_loc}' not found")
+        sys.exit(e.errno)
 
 
 def load_requirements_file(requirements_loc: str) -> Set[Package]:
@@ -60,7 +64,7 @@ def load_requirements_file(requirements_loc: str) -> Set[Package]:
                 )
                 requirements.add(pkg)
     except FileNotFoundError:
-        decorative_print(f"{requirements_loc} file not found. Creating new one")
+        decorative_print(f"File '{requirements_loc}' not found. Creating new one")
     finally:
         return requirements
 
