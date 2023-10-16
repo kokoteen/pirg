@@ -6,7 +6,7 @@ from requests import HTTPError
 from pirg.pirg import install, uninstall
 
 
-def mock_get_name_version(package_name):
+def mock_get_package(package_name):
     status_code = 404
     response = requests.Response()
     response.status_code = status_code
@@ -45,7 +45,7 @@ def test_install(tmpdir, monkeypatch):
 
     # test wrong package name
     package_names = ["package1"]
-    monkeypatch.setattr("pirg.utils.get_name_version", mock_get_name_version)
+    monkeypatch.setattr("pirg.utils.get_package", mock_get_package)
     with pytest.raises(SystemExit) as excinfo:
         install(package_names=package_names, requirements_path=requirements_file.strpath)
     assert excinfo.value.code == 404

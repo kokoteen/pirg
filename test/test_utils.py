@@ -2,14 +2,14 @@ import os
 import sys
 import responses
 import pytest
-from packaging.specifiers import SpecifierSet
+from packaging.specifiers import SpecifierSet, Version
 from pirg.custom_exceptions import DisabledPipFlag, WrongSpecifierSet, WrongPkgName
 from pirg.models import Package
 from pirg.utils import (
     PYPI_URL,
     check_for_pip_args,
     load_requirements_file,
-    get_name_version,
+    get_package,
     create_requirements,
     check_for_requirements_file,
     parse_package_name,
@@ -64,8 +64,58 @@ def test_load_requirements_file(temporary_requirements_file):
     assert not requirements
 
 
-def test_get_name_version():
-    package_name = ["package1"]
+def test_get_package():
+    package_name = [
+        "package1",
+        "package2",
+        "package3",
+        "package4",
+    ]
+
+    specifier_set = ["", "", ">1.1", ">1.1"]
+    mock_response_body = [
+        {
+            "releases": {
+                "1.0.0": [{"requires_python": ">=3.8"}],
+                "1.1.0": [{"requires_python": ">=3.8"}],
+                "1.2.0": [{"requires_python": ">=3.8"}],
+            }
+        },
+        {
+            "releases": {
+                "1.0.0": [{"requires_python": None}],
+                "1.1.0": [{"requires_python": None}],
+                "1.2.0": [{"requires_python": None}],
+            }
+        },
+        {
+            "releases": {
+                "1.0.0": [{"requires_python": ">=3.8"}],
+                "1.1.0": [{"requires_python": ">=3.8"}],
+                "1.2.0": [{"requires_python": ">=3.8"}],
+            }
+        },
+        {
+            "releases": {
+                "1.0.0": [{"requires_python": None}],
+                "1.1.0": [{"requires_python": None}],
+                "1.2.0": [{"requires_python": None}],
+            }
+        },
+    ]
+
+    for pkg, ss, mres in zip(package_name, specifier_set, mock_response_body):
+        url = PYPI_URL(pkg)
+
+        with responses.RequestsMock() as rsps:
+            rsps.add(responses.GET, url, json=mres)
+            result = get_package(pkg + ss)
+
+            assert result.name == pkg
+            assert Version("1.2.0") in result.specifier_set
+
+    package_name = "package5"
+    specifier_set = "==3.0"
     mock_response_body = {
         "releases": {
             "1.0.0": [{"requires_python": ">=3.8"}],
@@ -73,16 +123,12 @@ def test_get_name_version():
             "1.2.0": [{"requires_python": ">=3.8"}],
         }
     }
+    url = PYPI_URL(package_name)
 
-    for pkg in package_name:
-        url = PYPI_URL(pkg)
-
+    with pytest.raises(WrongSpecifierSet) as excinfo:
         with responses.RequestsMock() as rsps:
             rsps.add(responses.GET, url, json=mock_response_body)
-            result = get_name_version(pkg)
-
-            assert result.name == pkg
-            assert str(result.specifier_set) == "==1.2.0"
+            result = get_package(package_name + specifier_set)
 
 
 def test_check_for_requirements_file(tmpdir):
