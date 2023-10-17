@@ -1,11 +1,13 @@
+import logging.config
 import subprocess
 import sys
 import typer
 import traceback
 
+from .config import log_config
 from importlib import metadata
 from requests.exceptions import HTTPError
-from typing import List, Optional
+from typing import List
 from typing_extensions import Annotated
 from .custom_exceptions import NothingToDo, DisabledPipFlag, WrongPkgName, WrongSpecifierSet
 from .models import Package
@@ -13,7 +15,6 @@ from .utils import (
     check_for_pip_args,
     check_for_requirements_file,
     load_requirements_file,
-    decorative_print,
     create_requirements,
     get_package,
     parse_package_name,
@@ -21,6 +22,7 @@ from .utils import (
 )
 
 __version__ = metadata.version("pirg")
+logging.config.dictConfig(log_config)
 
 main = typer.Typer()
 
@@ -44,6 +46,7 @@ def install(
     package_names: Annotated[List[str], typer.Argument(help="List of packages")] = None,
     requirements_path: Annotated[str, typer.Option()] = check_for_requirements_file(),
     update_all: Annotated[bool, typer.Option()] = False,
+    log_level: Annotated[str, typer.Option(help="Set the log level")] = "INFO",
 ) -> None:
     """
     Installs [package_names] and puts them in the requirements file on [requirements_path] location
@@ -54,6 +57,10 @@ def install(
         `pirg install torch -- --index-url https://download.pytorch.org/whl/cu118`
 
     """
+    log_level = log_level.upper()
+    log_level = getattr(logging, log_level)
+    logging.getLogger().setLevel(log_level)
+
     try:
         pip_args = check_for_pip_args()
         package_names = set(package_names) - pip_args
@@ -83,15 +90,15 @@ def install(
         create_requirements(package_names=update_current_pkgs, requirements_loc=requirements_path)
     except HTTPError as e:
         pkg_name = e.args[0].split()[-1].split("/")[-2]
-        decorative_print(f"Failed to find the latest version of {pkg_name} on PyPI")
+        logging.error(f"Failed to find the latest version of {pkg_name} on PyPI")
         traceback.print_exc()
         sys.exit(e.response.status_code)
     except subprocess.CalledProcessError as e:
-        decorative_print("Failed to install packages")
+        logging.error("Failed to install packages")
         traceback.print_exc()
         sys.exit(e.returncode)
     except (NothingToDo, DisabledPipFlag, WrongPkgName, WrongSpecifierSet) as e:
-        decorative_print(str(e))
+        logging.error(str(e))
         sys.exit(e.exit_code)
 
 
@@ -100,6 +107,7 @@ def uninstall(
     package_names: Annotated[List[str], typer.Argument()] = None,
     requirements_path: Annotated[str, typer.Option()] = check_for_requirements_file(),
     delete_all: Annotated[bool, typer.Option()] = False,
+    log_level: Annotated[str, typer.Option(help="Set the log level")] = "INFO",
 ) -> None:
     """
     Uninstalls [package_names] and removes them from the requirements file on [requirements_path] location
@@ -110,6 +118,10 @@ def uninstall(
         `pirg uninstall torch -- --yes`
 
     """
+    log_level = log_level.upper()
+    log_level = getattr(logging, log_level)
+    logging.getLogger().setLevel(log_level)
+
     try:
         pip_args = check_for_pip_args()
         package_names = set(package_names) - pip_args
@@ -135,15 +147,15 @@ def uninstall(
         create_requirements(package_names=current_pkgs, requirements_loc=requirements_path)
     except HTTPError as e:
         pkg_name = e.args[0].split()[-1].split("/")[-2]
-        decorative_print(f"Failed to find the latest version of {pkg_name} on PyPI")
+        logging.error(f"Failed to find the latest version of {pkg_name} on PyPI")
         traceback.print_exc()
         sys.exit(e.response.status_code)
     except subprocess.CalledProcessError as e:
-        decorative_print("Failed to remove packages")
+        logging.error("Failed to remove packages")
         traceback.print_exc()
         sys.exit(e.returncode)
     except (NothingToDo, DisabledPipFlag, WrongPkgName, WrongSpecifierSet) as e:
-        decorative_print(str(e))
+        logging.error(str(e))
         sys.exit(e.exit_code)
 
 
