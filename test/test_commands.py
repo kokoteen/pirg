@@ -6,6 +6,11 @@ from requests import HTTPError
 from pirg.pirg import install, uninstall
 
 
+# TODO: test update all
+# FIXME: try to mock packages
+# FIXME: mock run_subprocess
+
+
 def mock_get_package(package_name):
     status_code = 404
     response = requests.Response()
@@ -26,7 +31,7 @@ def test_install(tmpdir, monkeypatch):
     install(package_names=package_names, requirements_path=requirements_file.strpath)
     assert requirements_file.exists()
 
-    # installing already installed packages
+    # test installing already installed packages
     with pytest.raises(SystemExit) as excinfo:
         install(package_names=package_names, requirements_path=requirements_file.strpath)
     assert excinfo.value.code == 4000
@@ -50,6 +55,11 @@ def test_install(tmpdir, monkeypatch):
         install(package_names=package_names, requirements_path=requirements_file.strpath)
     assert excinfo.value.code == 404
 
+    # test installing with no args
+    with pytest.raises(SystemExit) as excinfo:
+        install(package_names=[])
+    assert excinfo.value.code == 4000
+
 
 def test_uninstall(tmpdir, monkeypatch):
     test_dir = tmpdir.mkdir("test_dir")
@@ -58,7 +68,6 @@ def test_uninstall(tmpdir, monkeypatch):
 
     monkeypatch.setattr("pirg.utils.load_requirements_file", lambda x: set())
     monkeypatch.setattr("pirg.utils.run_subprocess", lambda pkgs, cmd, args: None)
-    # FIXME: mock run_subprocess
 
     # create requirements file
     install(package_names=package_names, requirements_path=requirements_file.strpath)

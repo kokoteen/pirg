@@ -41,7 +41,7 @@ def common(
 
 @main.command()
 def install(
-    package_names: Annotated[Optional[List[str]], typer.Argument(help="List of packages")] = None,
+    package_names: Annotated[List[str], typer.Argument(help="List of packages")] = None,
     requirements_path: Annotated[str, typer.Option()] = check_for_requirements_file(),
     update_all: Annotated[bool, typer.Option()] = False,
 ) -> None:
@@ -97,7 +97,7 @@ def install(
 
 @main.command()
 def uninstall(
-    package_names: Annotated[Optional[List[str]], typer.Argument()] = None,
+    package_names: Annotated[List[str], typer.Argument()] = None,
     requirements_path: Annotated[str, typer.Option()] = check_for_requirements_file(),
     delete_all: Annotated[bool, typer.Option()] = False,
 ) -> None:
