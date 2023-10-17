@@ -42,9 +42,13 @@ def create_requirements(
     requirements_loc: str,
     flag: str = "w",
 ) -> None:
-    with open(requirements_loc, flag) as req_file:
-        for pkg in package_names:
-            req_file.write(f"{str(pkg)}\n")
+    try:
+        with open(requirements_loc, flag) as req_file:
+            for pkg in package_names:
+                req_file.write(f"{str(pkg)}\n")
+    except FileNotFoundError as e:
+        decorative_print(f"File '{requirements_loc}' not found")
+        sys.exit(e.errno)
 
 
 def load_requirements_file(requirements_loc: str) -> Set[Package]:
@@ -59,13 +63,13 @@ def load_requirements_file(requirements_loc: str) -> Set[Package]:
                     specifier_set=specifier_set,
                 )
                 requirements.add(pkg)
-    except FileNotFoundError:
-        decorative_print(f"{requirements_loc} file not found. Creating new one")
+    except FileNotFoundError as e:
+        decorative_print(f"File '{requirements_loc}' not found. Creating new one")
     finally:
         return requirements
 
 
-def get_name_version(package_name: str) -> Package:
+def get_package(package_name: str) -> Package:
     pkg_name, pkg_suffix, pkg_specifier_set = parse_package_name(package_name)
 
     response = requests.get(PYPI_URL(pkg_name=pkg_name))
@@ -80,13 +84,24 @@ def get_name_version(package_name: str) -> Package:
         and PY_VERSION in SpecifierSet(elem["requires_python"])
     }
 
+    if not valid_versions:
+        # requires_python = None for all pkgs
+        valid_versions = {Specifier(f"=={rel}") for rel in package_data["releases"]}
+
     pkg_specifier_set = SpecifierSet(pkg_specifier_set) if pkg_specifier_set else None
+
     if pkg_specifier_set:
         specifier_set = {
             pkg_specifier_set for vv in valid_versions if vv.version in pkg_specifier_set
-        }.pop()
+        }
+
         if not specifier_set:
+            # if the specifier is wrong we get from packaging lib Invalid specifier
+            # this means, here can only be empty specifier set
+            # which can happen if valid version is not in provided specifier set
             raise WrongSpecifierSet(f"Not valid specifier set: {pkg_specifier_set}")
+
+        specifier_set = max(specifier_set, key=str)
     else:
         specifier_set = max(valid_versions, key=str)
 

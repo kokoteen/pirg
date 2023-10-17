@@ -15,7 +15,7 @@ from .utils import (
     load_requirements_file,
     decorative_print,
     create_requirements,
-    get_name_version,
+    get_package,
     parse_package_name,
     run_subprocess,
 )
@@ -41,7 +41,7 @@ def common(
 
 @main.command()
 def install(
-    package_names: Annotated[Optional[List[str]], typer.Argument(help="List of packages")] = None,
+    package_names: Annotated[List[str], typer.Argument(help="List of packages")] = None,
     requirements_path: Annotated[str, typer.Option()] = check_for_requirements_file(),
     update_all: Annotated[bool, typer.Option()] = False,
 ) -> None:
@@ -59,12 +59,12 @@ def install(
         package_names = set(package_names) - pip_args
 
         current_pkgs = load_requirements_file(requirements_loc=requirements_path)
-        new_pkgs = {get_name_version(package_name=pkg) for pkg in package_names}
-        new_pkgs = new_pkgs - current_pkgs  # check if pkg is already in req
+        new_pkgs = {get_package(package_name=pkg) for pkg in package_names}
+        new_pkgs = new_pkgs - current_pkgs
 
         if update_all:
             # all pkgs update
-            update_current_pkgs = {get_name_version(package_name=pkg.name) for pkg in current_pkgs}
+            update_current_pkgs = {get_package(package_name=pkg.name) for pkg in current_pkgs}
             update_current_pkgs = new_pkgs.union(update_current_pkgs)
             new_pkgs = update_current_pkgs
         else:
@@ -97,7 +97,7 @@ def install(
 
 @main.command()
 def uninstall(
-    package_names: Annotated[Optional[List[str]], typer.Argument()] = None,
+    package_names: Annotated[List[str], typer.Argument()] = None,
     requirements_path: Annotated[str, typer.Option()] = check_for_requirements_file(),
     delete_all: Annotated[bool, typer.Option()] = False,
 ) -> None:
