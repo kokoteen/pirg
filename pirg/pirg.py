@@ -17,13 +17,18 @@ from .models import Package
 from .utils import (
     check_for_pip_args,
     check_for_requirements_file,
-    load_requirements_file,
+    check_if_pypi_simple_is_modified,
+    create_db,
     create_requirements,
+    fuzzy_search,
     get_package,
+    get_pypi_simple_data,
+    load_requirements_file,
     parse_package_name,
     run_subprocess,
 )
 
+TEMP_FILENAME = "pirg_pkg_db.txt"
 __version__ = metadata.version("pirg")
 logging.config.dictConfig(log_config)
 
@@ -39,7 +44,12 @@ def version_callback(value: bool):
 @main.callback()
 def common(
     ctx: typer.Context,
-    version: bool = typer.Option(None, "--version", callback=version_callback),
+    version: bool = typer.Option(
+        None,
+        "--version",
+        help="Current version",
+        callback=version_callback,
+    ),
 ):
     pass
 
@@ -166,6 +176,90 @@ def uninstall(
     except (NothingToDo, DisabledPipFlag, WrongPkgName, WrongSpecifierSet) as e:
         logging.error(str(e))
         sys.exit(e.exit_code)
+
+
+@main.command()
+def search(
+    user_input: Annotated[str, typer.Argument()] = None,
+    log_level: Annotated[str, typer.Option(help="Set the log level")] = "INFO",
+) -> None:
+    """
+    Search for python package on PYPI
+
+    Example:
+        `pirg search sqlalchemy` -> Search result: ['SQLAlchemy', 'sqlalchemyp',...]
+    """
+    log_level = log_level.upper()
+    log_level = getattr(logging, log_level)
+    logging.getLogger().setLevel(log_level)
+
+    try:
+        temp_dir = tempfile.gettempdir()
+        filename = os.path.join(temp_dir, TEMP_FILENAME)
+
+        if not os.path.exists(filename):
+            raise FileNotFoundError("Package names file doesn't exist. Please run `initdb` first.")
+
+        if check_if_pypi_simple_is_modified():
+            logging.info(
+                "Current list of package names is out of date. Please update with `initdb --update`"
+            )
+
+        with open(filename, "r") as file:
+            package_names = [line.strip() for line in file]
+
+        indexed_package_names = {name.lower(): name for name in package_names}
+        fuzzy_search(user_input, indexed_package_names)
+    except FileNotFoundError as e:
+        traceback.print_exc()
+        sys.exit(e.errno)
+    except HTTPError as e:
+        logging.error(e)
+        traceback.print_exc()
+        sys.exit(e.response.status_code)
+
+
+@main.command()
+def initdb(
+    update: Annotated[bool, typer.Option()] = False,
+    log_level: Annotated[str, typer.Option(help="Set the log level")] = "INFO",
+) -> None:
+    """
+    Initialize or update current package names list
+
+    Example:
+        `pirg initdb`
+    """
+    log_level = log_level.upper()
+    log_level = getattr(logging, log_level)
+    logging.getLogger().setLevel(log_level)
+
+    try:
+        temp_dir = tempfile.gettempdir()
+        filename = os.path.join(temp_dir, TEMP_FILENAME)
+
+        if not update and os.path.exists(filename):
+            logging.info("Database already initialized")
+            return
+
+        new_version = check_if_pypi_simple_is_modified()
+        if update and not new_version:
+            logging.info("Database is up-to-date")
+            return
+
+        logging.info("Downloading data")
+        data = get_pypi_simple_data()
+
+        create_db(filename, data)
+        logging.info("Initialized database")
+        logging.debug(f"Database location: {filename}")
+    except FileNotFoundError as e:
+        traceback.print_exc()
+        sys.exit(e.errno)
+    except HTTPError as e:
+        logging.error(e)
+        traceback.print_exc()
+        sys.exit(e.response.status_code)
 
 
 if __name__ == "__main__":

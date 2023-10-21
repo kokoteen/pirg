@@ -138,6 +138,49 @@ def check_for_requirements_file() -> str:
     return os.path.join(os.getcwd(), REQUIREMENTS)
 
 
+def get_pypi_simple_data(url: str = PYPI_SIMPLE_URL) -> str:
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.text
+
+
+def check_if_pypi_simple_is_modified(days: int = 3, url: str = PYPI_SIMPLE_URL) -> bool:
+    current_date = datetime.now()
+    last_modified_date = current_date - timedelta(days=days)
+    if_modified_since = last_modified_date.strftime("%a, %d %b %Y %H:%M:%S GMT")
+
+    headers = {"If-Modified-Since": if_modified_since}
+
+    response = requests.head(url, headers=headers)
+    response.raise_for_status()
+
+    if response.status_code == 200:
+        return True
+    elif response.status_code == 304:
+        return False
+
+
+def create_db(filename: str, data: str) -> None:
+    soup = BeautifulSoup(data, "html.parser")
+    links = soup.find_all("a")
+    package_names = [link.text.strip() for link in links if link.text.strip()]
+
+    with open(filename, "w") as file:
+        for package in package_names:
+            file.write(package + "\n")
+
+
+def fuzzy_search(search_input: str, indexed_pkg_names: Dict[str, str]) -> None:
+    if not indexed_pkg_names:
+        raise Exception("Empty DB")
+
+    matches = get_close_matches(search_input, indexed_pkg_names, n=7, cutoff=0.6)
+    search_results = process.extract(search_input, matches, scorer=fuzz.ratio)
+
+    org_names = [indexed_pkg_names[result] for result, _ in search_results]
+    logging.info(f"Search result: {org_names}")
+
+
 def run_subprocess(pkgs: List[str], pip_command: str, pip_args: List[str]):
     subprocess.run(["pip", pip_command] + pkgs + pip_args, check=True)
     logging.info(f"{pip_command.capitalize()}ed packages: {pkgs}")
