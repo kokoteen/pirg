@@ -1,15 +1,18 @@
 import logging.config
+import os
 import subprocess
 import sys
-import typer
+import tempfile
 import traceback
+from importlib import metadata
+from typing import List
+
+import typer
+from requests.exceptions import HTTPError
+from typing_extensions import Annotated
 
 from .config import log_config
-from importlib import metadata
-from requests.exceptions import HTTPError
-from typing import List
-from typing_extensions import Annotated
-from .custom_exceptions import NothingToDo, DisabledPipFlag, WrongPkgName, WrongSpecifierSet
+from .custom_exceptions import DisabledPipFlag, NothingToDo, WrongPkgName, WrongSpecifierSet
 from .models import Package
 from .utils import (
     check_for_pip_args,
@@ -88,6 +91,9 @@ def install(
 
         run_subprocess(pkgs=ins_pkgs, pip_command="install", pip_args=list(pip_args))
         create_requirements(package_names=update_current_pkgs, requirements_loc=requirements_path)
+    except FileNotFoundError as e:
+        traceback.print_exc()
+        sys.exit(e.errno)
     except HTTPError as e:
         pkg_name = e.args[0].split()[-1].split("/")[-2]
         logging.error(f"Failed to find the latest version of {pkg_name} on PyPI")
@@ -145,6 +151,9 @@ def uninstall(
 
         run_subprocess(pkgs=rm_pkgs, pip_command="uninstall", pip_args=list(pip_args))
         create_requirements(package_names=current_pkgs, requirements_loc=requirements_path)
+    except FileNotFoundError as e:
+        traceback.print_exc()
+        sys.exit(e.errno)
     except HTTPError as e:
         pkg_name = e.args[0].split()[-1].split("/")[-2]
         logging.error(f"Failed to find the latest version of {pkg_name} on PyPI")
