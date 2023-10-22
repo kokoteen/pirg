@@ -3,10 +3,11 @@ import sys
 import responses
 import pytest
 from packaging.specifiers import Version
-from pirg.custom_exceptions import DisabledPipFlag, WrongSpecifierSet, WrongPkgName
-from pirg.utils import (
+from exceptions import DisabledPipFlag, EmptyDatabase, WrongSpecifierSet, WrongPkgName
+from utils import (
     PYPI_URL,
     check_for_pip_args,
+    fuzzy_search,
     load_requirements_file,
     get_package,
     check_for_requirements_file,
@@ -181,4 +182,24 @@ def test_parse_package_name():
 
 
 def test_fuzzy_search():
-    pass
+    test_db = {
+        "package1": "Package1",
+        "package2": "Package2",
+        "package3": "Package3",
+    }
+
+    search_term = "Package1"
+
+    output = fuzzy_search(search_term, test_db)
+    assert search_term in output
+
+    search_term = ""
+    output = fuzzy_search(search_term, test_db)
+    assert not output
+
+    search_term = "ASdwe"
+    output = fuzzy_search(search_term, test_db)
+    assert not output
+
+    with pytest.raises(EmptyDatabase):
+        _ = fuzzy_search(search_term, {})

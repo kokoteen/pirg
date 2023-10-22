@@ -13,8 +13,8 @@ from fuzzywuzzy import fuzz, process
 from packaging.specifiers import Specifier, SpecifierSet
 from packaging.version import Version
 
-from .custom_exceptions import DisabledPipFlag, WrongPkgName, WrongSpecifierSet
-from .models import Package
+from exceptions import DisabledPipFlag, WrongPkgName, WrongSpecifierSet, EmptyDatabase
+from models import Package
 
 PYPI_URL = lambda pkg_name: f"https://pypi.org/pypi/{pkg_name}/json"
 PYPI_SIMPLE_URL = "https://pypi.org/simple/"
@@ -52,7 +52,7 @@ def create_requirements(
 def load_requirements_file(requirements_loc: str) -> Set[Package]:
     requirements = set()
 
-    if not requirements_loc:
+    if not os.path.exists(requirements_loc):
         return requirements
 
     with open(requirements_loc, "r") as req_file:
@@ -154,6 +154,7 @@ def check_if_pypi_simple_is_modified(days: int = 3, url: str = PYPI_SIMPLE_URL) 
     response = requests.head(url, headers=headers)
     response.raise_for_status()
 
+    logging.info("samo zbog testa")
     if response.status_code == 200:
         return True
     elif response.status_code == 304:
@@ -170,15 +171,15 @@ def create_db(filename: str, data: str) -> None:
             file.write(package + "\n")
 
 
-def fuzzy_search(search_input: str, indexed_pkg_names: Dict[str, str]) -> None:
+def fuzzy_search(search_input: str, indexed_pkg_names: Dict[str, str]) -> List[str]:
     if not indexed_pkg_names:
-        raise Exception("Empty DB")
+        raise EmptyDatabase("Empty DB")
 
     matches = get_close_matches(search_input, indexed_pkg_names, n=7, cutoff=0.6)
     search_results = process.extract(search_input, matches, scorer=fuzz.ratio)
 
     org_names = [indexed_pkg_names[result] for result, _ in search_results]
-    logging.info(f"Search result: {org_names}")
+    return org_names
 
 
 def run_subprocess(pkgs: List[str], pip_command: str, pip_args: List[str]):

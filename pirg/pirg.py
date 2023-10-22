@@ -11,10 +11,15 @@ import typer
 from requests.exceptions import HTTPError
 from typing_extensions import Annotated
 
-from .config import log_config
-from .custom_exceptions import DisabledPipFlag, NothingToDo, WrongPkgName, WrongSpecifierSet
-from .models import Package
-from .utils import (
+from config import log_config
+from exceptions import (
+    DisabledPipFlag,
+    EmptyDatabase,
+    WrongPkgName,
+    WrongSpecifierSet,
+)
+from models import Package
+from utils import (
     check_for_pip_args,
     check_for_requirements_file,
     check_if_pypi_simple_is_modified,
@@ -67,12 +72,13 @@ def install(
     You can pass additional `pip install` arguments after "--".
 
     Example:
-        `pirg install torch -- --index-url https://download.pytorch.org/whl/cu118`
+        `_pit install torch -- --index-url https://download.pytorch.org/whl/cu118`
 
     """
     log_level = log_level.upper()
     log_level = getattr(logging, log_level)
     logging.getLogger().setLevel(log_level)
+    logging.debug(f"ARGV: {sys.argv}")
 
     try:
         pip_args = check_for_pip_args()
@@ -97,7 +103,8 @@ def install(
 
         skip_pip_args = {"-h", "--help"}
         if not ins_pkgs and not update_all and not bool(skip_pip_args & pip_args):
-            raise NothingToDo("Nothing to install")
+            logging.info("Nothing to install")
+            return
 
         run_subprocess(pkgs=ins_pkgs, pip_command="install", pip_args=list(pip_args))
         create_requirements(package_names=update_current_pkgs, requirements_loc=requirements_path)
@@ -113,7 +120,7 @@ def install(
         logging.error("Failed to install packages")
         traceback.print_exc()
         sys.exit(e.returncode)
-    except (NothingToDo, DisabledPipFlag, WrongPkgName, WrongSpecifierSet) as e:
+    except (DisabledPipFlag, WrongPkgName, WrongSpecifierSet) as e:
         logging.error(str(e))
         sys.exit(e.exit_code)
 
@@ -131,12 +138,13 @@ def uninstall(
     You can pass additional `pip uninstall` arguments after "--".
 
     Example:
-        `pirg uninstall torch -- --yes`
+        `_pit uninstall torch -- --yes`
 
     """
     log_level = log_level.upper()
     log_level = getattr(logging, log_level)
     logging.getLogger().setLevel(log_level)
+    logging.debug(f"ARGV: {sys.argv}")
 
     try:
         pip_args = check_for_pip_args()
@@ -157,7 +165,8 @@ def uninstall(
 
         skip_pip_args = {"-h", "--help"}
         if not rm_pkgs and not delete_all and not bool(skip_pip_args & pip_args):
-            raise NothingToDo("Nothing to remove")
+            logging.info("Nothing to remove")
+            return
 
         run_subprocess(pkgs=rm_pkgs, pip_command="uninstall", pip_args=list(pip_args))
         create_requirements(package_names=current_pkgs, requirements_loc=requirements_path)
@@ -173,7 +182,7 @@ def uninstall(
         logging.error("Failed to remove packages")
         traceback.print_exc()
         sys.exit(e.returncode)
-    except (NothingToDo, DisabledPipFlag, WrongPkgName, WrongSpecifierSet) as e:
+    except (DisabledPipFlag, WrongPkgName, WrongSpecifierSet) as e:
         logging.error(str(e))
         sys.exit(e.exit_code)
 
@@ -187,11 +196,12 @@ def search(
     Search for python package on PYPI
 
     Example:
-        `pirg search sqlalchemy` -> Search result: ['SQLAlchemy', 'sqlalchemyp',...]
+        `_pit search sqlalchemy` -> Search result: ['SQLAlchemy', 'sqlalchemyp',...]
     """
     log_level = log_level.upper()
     log_level = getattr(logging, log_level)
     logging.getLogger().setLevel(log_level)
+    logging.debug(f"ARGV: {sys.argv}")
 
     try:
         temp_dir = tempfile.gettempdir()
@@ -209,7 +219,11 @@ def search(
             package_names = [line.strip() for line in file]
 
         indexed_package_names = {name.lower(): name for name in package_names}
-        fuzzy_search(user_input, indexed_package_names)
+        search_output = fuzzy_search(user_input, indexed_package_names)
+        logging.info(f"Search result: {search_output}")
+    except EmptyDatabase as e:
+        logging.error(str(e))
+        sys.exit(e.exit_code)
     except FileNotFoundError as e:
         traceback.print_exc()
         sys.exit(e.errno)
@@ -228,15 +242,17 @@ def initdb(
     Initialize or update current package names list
 
     Example:
-        `pirg initdb`
+        `_pit initdb`
     """
     log_level = log_level.upper()
     log_level = getattr(logging, log_level)
     logging.getLogger().setLevel(log_level)
+    logging.debug(f"ARGV: {sys.argv}")
 
     try:
         temp_dir = tempfile.gettempdir()
         filename = os.path.join(temp_dir, TEMP_FILENAME)
+        logging.debug(f"Database location: {filename}")
 
         if not update and os.path.exists(filename):
             logging.info("Database already initialized")
@@ -248,11 +264,12 @@ def initdb(
             return
 
         logging.info("Downloading data")
+        quit()
         data = get_pypi_simple_data()
+        logging.info(data[:5])
 
         create_db(filename, data)
-        logging.info("Initialized database")
-        logging.debug(f"Database location: {filename}")
+        logging.info("Database initialized")
     except FileNotFoundError as e:
         traceback.print_exc()
         sys.exit(e.errno)
