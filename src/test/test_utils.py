@@ -3,8 +3,8 @@ import sys
 import responses
 import pytest
 from packaging.specifiers import Version
-from exceptions import DisabledPipFlag, EmptyDatabase, WrongSpecifierSet, WrongPkgName
-from utils import (
+from pirg.exceptions import DisabledPipFlag, EmptyDatabase, WrongSpecifierSet, WrongPkgName
+from pirg.utils import (
     PYPI_URL,
     check_for_pip_args,
     fuzzy_search,

@@ -13,8 +13,8 @@ from fuzzywuzzy import fuzz, process
 from packaging.specifiers import Specifier, SpecifierSet
 from packaging.version import Version
 
-from exceptions import DisabledPipFlag, WrongPkgName, WrongSpecifierSet, EmptyDatabase
-from models import Package
+from .exceptions import DisabledPipFlag, WrongPkgName, WrongSpecifierSet, EmptyDatabase
+from .models import Package
 
 PYPI_URL = lambda pkg_name: f"https://pypi.org/pypi/{pkg_name}/json"
 PYPI_SIMPLE_URL = "https://pypi.org/simple/"

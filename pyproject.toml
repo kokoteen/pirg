@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pirg"
+version = "1.3.0"
+authors = [
+  {name="kokotin"},
+]
+description ="command-line tool that simplifies the management of project's `requirements.txt` file"
+readme = "README.md"
+license = {file = "licenses/GPL-2.0.txt"}
+requires-python = ">=3.8"
+dependencies = [
+    "typer[all]==0.9.0",
+    "requests==2.31.0",
+    "packaging==23.2",
+    "beautifulsoup4==4.12.2",
+    "fuzzywuzzy[speedup]==0.9.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/kokoteen/pirg"
+"Bug Tracker" = "https://github.com/kokoteen/pirg/issues"
+
+[project.scripts]
+pirg = "pirg:main"

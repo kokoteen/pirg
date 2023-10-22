@@ -11,15 +11,15 @@ import typer
 from requests.exceptions import HTTPError
 from typing_extensions import Annotated
 
-from config import log_config
-from exceptions import (
+from pirg.config import log_config
+from pirg.exceptions import (
     DisabledPipFlag,
     EmptyDatabase,
     WrongPkgName,
     WrongSpecifierSet,
 )
-from models import Package
-from utils import (
+from .models import Package
+from .utils import (
     check_for_pip_args,
     check_for_requirements_file,
     check_if_pypi_simple_is_modified,
