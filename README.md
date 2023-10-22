@@ -37,9 +37,9 @@ Before using **pirg**, make sure you have Python 3.8 or higher installed on your
 
 ## Usage
 
-- install - Add package to enviroment and `requirements.txt`
-- uninstall - Remove package from enviroment and `requirements.txt`
-- search - Search for package in pypi
+- install - Add package to environment and `requirements.txt`
+- uninstall - Remove package from environment and `requirements.txt`
+- search - Search PyPI for package
 
 ## Acknowledgments & License
 
@@ -47,7 +47,9 @@ This project makes use of the following third-party libraries, each with its own
 
 - [Typer](https://github.com/tiangolo/typer) ([MIT License](./licenses/MIT.txt))
 - [Requests](https://github.com/psf/requests) ([Apache License 2.0](./licenses/APACHE-2.0.txt))
-- [Packaging](https://github.com/pypa/packaging) ([Apache License 2.0](./licenses/APACHE-2.0.txt))
+- [packaging](https://github.com/pypa/packaging) ([Apache License 2.0](./licenses/APACHE-2.0.txt))
+- [fuzzywuzzy](https://github.com/seatgeek/fuzzywuzzy) ([GPL-2.0 License](./licenses/GPL-2.0.txt))
+- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) ([MIT License](./licenses/MIT.txt))
 
 Additionally, this project contains code under the [GPL-2.0 License](./licenses/GPL-2.0.txt)
 
