@@ -37,51 +37,21 @@ Before using **pirg**, make sure you have Python 3.8 or higher installed on your
 
 ## Usage
 
-### Adding Packages to `requirements.txt`
+- install - Add package to environment and `requirements.txt`
+- uninstall - Remove package from environment and `requirements.txt`
+- search - Search PyPI for package
 
-To add one or more packages to your project's `requirements.txt` file and install them, use the following command:
-
-```
-pirg install package_name1 package_name2 ...
-```
-
-### Removing Packages from `requirements.txt`
-
-To remove one or more packages from your project's `requirements.txt` file and uninstall them, use the following command:
-
-```
-pirg uninstall package_name1 package_name2 ...
-```
-
-**Note:** Make sure to replace `package_name1`, `package_name2`, etc., with the actual names of the packages you want to add or remove.
-
-### Additional Options
-
-- You can specify a custom path for your `requirements.txt` file using the `--requirements-path` option. By default, it assumes `./requirements.txt`.
-
-## Acknowledgments
+## Acknowledgments & License
 
 This project makes use of the following third-party libraries, each with its own licensing terms:
 
-- [Typer](https://github.com/tiangolo/typer)
-  - **License**: [MIT License](./licenses/MIT.txt)
+- [Typer](https://github.com/tiangolo/typer) ([MIT License](./licenses/MIT.txt))
+- [Requests](https://github.com/psf/requests) ([Apache License 2.0](./licenses/APACHE-2.0.txt))
+- [packaging](https://github.com/pypa/packaging) ([Apache License 2.0](./licenses/APACHE-2.0.txt))
+- [fuzzywuzzy](https://github.com/seatgeek/fuzzywuzzy) ([GPL-2.0 License](./licenses/GPL-2.0.txt))
+- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) ([MIT License](./licenses/MIT.txt))
 
-- [Requests](https://github.com/psf/requests)
-  - **License**: [Apache License 2.0](./licenses/APACHE-2.0.txt)
- 
-- [Packaging](https://github.com/pypa/packaging)
-  - **License**: [Apache License 2.0](./licenses/APACHE-2.0.txt)
-
-Additionally, this project contains code under the GPL-2.0 License:
-
-- **License**: [GPL-2.0 License](./licenses/GPL-2.0.txt)
-
-## License
-
-This project is licensed under the terms of the GNU General Public License, version 2.0. See the [GPL-2.0 License](./licenses/GPL-2.0.txt) file for details.
-
-The third-party libraries Typer, Packaging and Requests are used in this project and have their own respective licenses. Please review their licenses in the [licenses](./licenses) directory for more information.
-
+Additionally, this project contains code under the [GPL-2.0 License](./licenses/GPL-2.0.txt)
 
 ## Contributions
 
