@@ -2,15 +2,14 @@ import os
 import sys
 import responses
 import pytest
-from packaging.specifiers import SpecifierSet, Version
-from pirg.custom_exceptions import DisabledPipFlag, WrongSpecifierSet, WrongPkgName
-from pirg.models import Package
+from packaging.specifiers import Version
+from pirg.exceptions import DisabledPipFlag, EmptyDatabase, WrongSpecifierSet, WrongPkgName
 from pirg.utils import (
     PYPI_URL,
     check_for_pip_args,
+    fuzzy_search,
     load_requirements_file,
     get_package,
-    create_requirements,
     check_for_requirements_file,
     parse_package_name,
 )
@@ -25,32 +24,6 @@ def temporary_requirements_file(tmpdir):
     yield requirements_path
 
     os.remove(requirements_path)
-
-
-def test_create_requirements(temporary_requirements_file):
-    package_names = {
-        Package(name="package2", specifier_set=SpecifierSet("==2.0.0")),
-        Package(name="package3", specifier_set=SpecifierSet("==3.0.0")),
-    }
-
-    # test when there are packages and the file is provided
-    create_requirements(package_names, temporary_requirements_file)
-    with open(temporary_requirements_file, "r") as req_file:
-        lines = req_file.readlines()
-        assert "package1==1.0.0\n" not in lines
-        assert "package2==2.0.0\n" in lines
-        assert "package3==3.0.0\n" in lines
-
-    # test if requirements file is empty when there are no packages
-    create_requirements(set(), temporary_requirements_file)
-    with open(temporary_requirements_file, "r") as req_file:
-        lines = req_file.readlines()
-        assert not lines
-
-    # test when the file is not provided
-    with pytest.raises(SystemExit) as excinfo:
-        create_requirements(set(), "")
-    assert excinfo.value.code == 2
 
 
 def test_load_requirements_file(temporary_requirements_file):
@@ -125,10 +98,10 @@ def test_get_package():
     }
     url = PYPI_URL(package_name)
 
-    with pytest.raises(WrongSpecifierSet) as excinfo:
+    with pytest.raises(WrongSpecifierSet):
         with responses.RequestsMock() as rsps:
             rsps.add(responses.GET, url, json=mock_response_body)
-            result = get_package(package_name + specifier_set)
+            _ = get_package(package_name + specifier_set)
 
 
 def test_check_for_requirements_file(tmpdir):
@@ -181,7 +154,7 @@ def test_check_for_pip_args(monkeypatch):
     test_argv = ["--", "-r", "requirements.txt"]
     monkeypatch.setattr(sys, "argv", test_argv)
     with pytest.raises(DisabledPipFlag):
-        result = check_for_pip_args()
+        _ = check_for_pip_args()
 
 
 def test_parse_package_name():
@@ -206,3 +179,27 @@ def test_parse_package_name():
     assert pkg_name == "SomePackage"
     assert not pkg_suffix
     assert not pkg_specifier_set
+
+
+def test_fuzzy_search():
+    test_db = {
+        "package1": "Package1",
+        "package2": "Package2",
+        "package3": "Package3",
+    }
+
+    search_term = "Package1"
+
+    output = fuzzy_search(search_term, test_db)
+    assert search_term in output
+
+    search_term = ""
+    output = fuzzy_search(search_term, test_db)
+    assert not output
+
+    search_term = "ASdwe"
+    output = fuzzy_search(search_term, test_db)
+    assert not output
+
+    with pytest.raises(EmptyDatabase):
+        _ = fuzzy_search(search_term, {})

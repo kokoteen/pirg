@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from packaging.specifiers import SpecifierSet
 from typing import Optional
+
+from packaging.specifiers import SpecifierSet
 
 
 @dataclass
