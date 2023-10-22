@@ -211,9 +211,9 @@ def search(
             raise FileNotFoundError("Package names file doesn't exist. Please run `initdb` first.")
 
         if check_if_pypi_simple_is_modified():
-            logging.info(
-                "Current list of package names is out of date. Please update with `initdb --update`"
-            )
+            # fmt: off
+            logging.info("Current list of package names is out of date. Please update with `initdb --update`")
+            # fmt: on
 
         with open(filename, "r") as file:
             package_names = [line.strip() for line in file]
@@ -264,9 +264,7 @@ def initdb(
             return
 
         logging.info("Downloading data")
-        quit()
         data = get_pypi_simple_data()
-        logging.info(data[:5])
 
         create_db(filename, data)
         logging.info("Database initialized")

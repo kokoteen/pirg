@@ -4,8 +4,8 @@ import sys
 import requests
 import pytest
 from requests import HTTPError
-from pirg.pirg import initdb, install, uninstall
-
+from pirg.pirg import initdb, install, uninstall, search
+from pirg.pirg import TEMP_FILENAME
 
 # TODO: test update all
 # FIXME: try to mock packages
@@ -106,23 +106,78 @@ def test_uninstall(tmpdir, monkeypatch, caplog):
 
 
 def test_initdb(monkeypatch, tmpdir, caplog):
-    pypi_simple_package_names_list = "package1\npackage2\npackage3"
-    caplog.set_level(logging.DEBUG)
+    def mock_data():
+        return "package1\npackage2\npackage3"
+
+    caplog.set_level(logging.INFO)
 
     monkeypatch.setattr("tempfile.gettempdir", lambda: tmpdir.strpath)
     monkeypatch.setattr(
-        "pirg.utils.check_if_pypi_simple_is_modified",
-        lambda: False,
+        "pirg.utils.check_if_pypi_simple_is_modified.__code__",
+        (lambda: False).__code__,
     )
     monkeypatch.setattr(
-        "pirg.utils.get_pypi_simple_data",
-        lambda: True,
+        "pirg.utils.get_pypi_simple_data.__code__",
+        mock_data.__code__,
     )
 
     # default
-    initdb(log_level="DEBUG")
+    initdb()
     assert "Database initialized" in [rec.message for rec in caplog.records]
 
+    # already initialized
+    initdb()
+    assert "Database already initialized" in [rec.message for rec in caplog.records]
 
-def test_search():
-    pass
+    # update
+    initdb(update=True)
+    assert "Database is up-to-date" in [rec.message for rec in caplog.records]
+
+
+def test_search(tmpdir, monkeypatch, caplog):
+    package_names = ["package1", "paCKage2", "Package3"]
+    filename = os.path.join(tmpdir.strpath, TEMP_FILENAME)
+    with open(filename, "w") as file:
+        for package in package_names:
+            file.write(package + "\n")
+
+    caplog.set_level(logging.INFO)
+
+    monkeypatch.setattr("tempfile.gettempdir", lambda: tmpdir.strpath)
+    monkeypatch.setattr(
+        "pirg.utils.check_if_pypi_simple_is_modified.__code__",
+        (lambda: False).__code__,
+    )
+
+    user_input = "package3"
+    search(user_input)
+    assert "Search result: ['Package3', 'paCKage2', 'package1']" in [
+        rec.message for rec in caplog.records
+    ]
+
+    user_input = ""
+    search(user_input)
+    assert "Search result: []" in [rec.message for rec in caplog.records]
+
+    with pytest.raises(TypeError):
+        search()
+
+    monkeypatch.setattr(
+        "pirg.utils.check_if_pypi_simple_is_modified.__code__",
+        (lambda: True).__code__,
+    )
+    user_input = ""
+    search(user_input)
+    assert (
+        "Current list of package names is out of date. Please update with `initdb --update`"
+        in [rec.message for rec in caplog.records]
+    )
+
+    filename = os.path.join(tmpdir.strpath, TEMP_FILENAME)
+    with open(filename, "w") as file:
+        file.write("")
+
+    user_input = ""
+    with pytest.raises(SystemExit) as excinfo:
+        search(user_input)
+    assert excinfo.value.code == 4004

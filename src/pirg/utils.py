@@ -154,7 +154,6 @@ def check_if_pypi_simple_is_modified(days: int = 3, url: str = PYPI_SIMPLE_URL) 
     response = requests.head(url, headers=headers)
     response.raise_for_status()
 
-    logging.info("samo zbog testa")
     if response.status_code == 200:
         return True
     elif response.status_code == 304:
