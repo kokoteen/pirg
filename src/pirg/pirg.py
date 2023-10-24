@@ -72,13 +72,13 @@ def install(
     You can pass additional `pip install` arguments after "--".
 
     Example:
-        `_pit install torch -- --index-url https://download.pytorch.org/whl/cu118`
+        `pirg install torch -- --index-url https://download.pytorch.org/whl/cu118`
 
     """
     log_level = log_level.upper()
     log_level = getattr(logging, log_level)
     logging.getLogger().setLevel(log_level)
-    logging.debug(f"ARGV: {sys.argv}")
+    logging.debug(f"argv: {sys.argv}")
 
     try:
         pip_args = check_for_pip_args()
@@ -100,6 +100,7 @@ def install(
             update_current_pkgs.update(new_pkgs)
 
         ins_pkgs = [f"{str(p)}" for p in new_pkgs]
+        logging.debug(f"ins_pkgs: {ins_pkgs}")
 
         skip_pip_args = {"-h", "--help"}
         if not ins_pkgs and not update_all and not bool(skip_pip_args & pip_args):
@@ -138,13 +139,13 @@ def uninstall(
     You can pass additional `pip uninstall` arguments after "--".
 
     Example:
-        `_pit uninstall torch -- --yes`
+        `pirg uninstall torch -- --yes`
 
     """
     log_level = log_level.upper()
     log_level = getattr(logging, log_level)
     logging.getLogger().setLevel(log_level)
-    logging.debug(f"ARGV: {sys.argv}")
+    logging.debug(f"argv: {sys.argv}")
 
     try:
         pip_args = check_for_pip_args()
@@ -196,12 +197,12 @@ def search(
     Search for python package on PYPI
 
     Example:
-        `_pit search sqlalchemy` -> Search result: ['SQLAlchemy', 'sqlalchemyp',...]
+        `pirg search sqlalchemy` -> Search result: ['SQLAlchemy', 'sqlalchemyp',...]
     """
     log_level = log_level.upper()
     log_level = getattr(logging, log_level)
     logging.getLogger().setLevel(log_level)
-    logging.debug(f"ARGV: {sys.argv}")
+    logging.debug(f"argv: {sys.argv}")
 
     try:
         temp_dir = tempfile.gettempdir()
@@ -242,12 +243,12 @@ def initdb(
     Initialize or update current package names list
 
     Example:
-        `_pit initdb`
+        `pirg initdb`
     """
     log_level = log_level.upper()
     log_level = getattr(logging, log_level)
     logging.getLogger().setLevel(log_level)
-    logging.debug(f"ARGV: {sys.argv}")
+    logging.debug(f"argv: {sys.argv}")
 
     try:
         temp_dir = tempfile.gettempdir()
