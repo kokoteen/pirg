@@ -101,7 +101,7 @@ def get_package(package_name: str) -> Package:
             # which can happen if valid version is not in provided specifier set
             raise WrongSpecifierSet(f"Not valid specifier set: {pkg_specifier_set}")
 
-        specifier_set = max(specifier_set, key=lambda x: Version(x.version))
+        specifier_set = specifier_set.pop()
     else:
         specifier_set = max(valid_versions, key=lambda x: Version(x.version))
 
