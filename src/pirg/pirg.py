@@ -82,6 +82,7 @@ def install(
 
     try:
         pip_args = check_for_pip_args()
+        logging.debug(f"pip_args: {pip_args}")
         package_names = set(package_names) - pip_args
 
         current_pkgs = load_requirements_file(requirements_loc=requirements_path)
@@ -149,6 +150,7 @@ def uninstall(
 
     try:
         pip_args = check_for_pip_args()
+        logging.debug(f"pip_args: {pip_args}")
         package_names = set(package_names) - pip_args
 
         package_names = [parse_package_name(val) for val in package_names]
