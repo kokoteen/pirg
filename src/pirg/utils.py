@@ -75,8 +75,8 @@ def get_package(package_name: str) -> Package:
     response.raise_for_status()
     package_data = response.json()
 
-    valid_versions = {
-        Specifier(f"=={rel}")
+    valid_versions: Set[Version] = {
+        Version(rel)
         for rel in package_data["releases"]
         for elem in package_data["releases"][rel]
         if elem["requires_python"] is not None
@@ -86,14 +86,13 @@ def get_package(package_name: str) -> Package:
     logging.debug(f"valid_versions: {valid_versions}")
     if not valid_versions:
         # when `requires_python = None` for all pkgs
-        valid_versions = {Specifier(f"=={rel}") for rel in package_data["releases"]}
+        valid_versions = {Version(rel) for rel in package_data["releases"]}
 
     pkg_specifier_set = SpecifierSet(pkg_specifier_set) if pkg_specifier_set else None
+    logging.debug(f"pkg_specifier_set: {pkg_specifier_set}")
 
     if pkg_specifier_set:
-        specifier_set = {
-            pkg_specifier_set for vv in valid_versions if vv.version in pkg_specifier_set
-        }
+        specifier_set = {pkg_specifier_set for vv in valid_versions if vv in pkg_specifier_set}
 
         if not specifier_set:
             # if the specifier is wrong we get from packaging lib Invalid specifier
@@ -103,8 +102,16 @@ def get_package(package_name: str) -> Package:
 
         specifier_set = specifier_set.pop()
     else:
-        specifier_set = max(valid_versions, key=lambda x: Version(x.version))
+        # do not allow pre, post or dev releases
+        valid_versions = {
+            v
+            for v in valid_versions
+            if not (v.is_prerelease or v.is_postrelease or v.is_devrelease)
+        }
+        max_version = max(valid_versions)
+        specifier_set = SpecifierSet(f"=={max_version}")
 
+    logging.debug(f"specifier_set: {specifier_set}")
     return Package(name=pkg_name, suffix=pkg_suffix, specifier_set=specifier_set)
 
 
